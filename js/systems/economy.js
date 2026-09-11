@@ -160,6 +160,8 @@ class Economy {
         if (Game.coinMultiplier && Game.coinMultiplier > 1) {
             multiplier *= Game.coinMultiplier;
         }
+        if (Game.meta) multiplier *= (Game.meta.effects().coinMultiplier || 1);
+        if (Game.runModifiers) multiplier *= (Game.runModifiers.effects().coinMultiplier || 1);
         
         const finalAmount = Math.floor(amount * multiplier);
         

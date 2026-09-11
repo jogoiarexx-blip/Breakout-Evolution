@@ -48,7 +48,10 @@ function initializeGame() {
         console.log('✅ Particles carregado');
 
         Game.bossSystem = new BossSystem();
-        console.log('✅ BossSystem carregado');
+        Game.hazards = new WorldHazardSystem();
+        Game.weapons = new WeaponSystem();
+        Game.challenges = new ChallengeSystem();
+        console.log('✅ BossSystem/WorldHazards/Weapons/Challenges carregados');
         
         Game.hud = new HUD();
         console.log('✅ HUD carregado');
@@ -93,6 +96,8 @@ let gameKeyHandler = (e) => {
             Game.state === 'LEADERBOARD' || 
             Game.state === 'STATISTICS' ||
             Game.state === 'LEVEL_SELECT' ||
+            Game.state === 'CAMPAIGN' ||
+            Game.state === 'UPGRADE_TREE' ||
             Game.state === 'SHOP') {
             Game.state = 'MENU';
             e.preventDefault();
@@ -221,7 +226,10 @@ function updateGameLogic(dt) {
             updateMenu(dt);
             break;
         case 'SETTINGS':
+        case 'CAMPAIGN':
         case 'LEVEL_SELECT':
+        case 'UPGRADE_TREE':
+        case 'PRE_LEVEL':
         case 'LOADING':
             break;
         // Outros estados não precisam de update
@@ -296,6 +304,8 @@ function updateGame(dt) {
     
     Game.brickManager.update();
     if (Game.bossSystem) Game.bossSystem.update(dt);
+    if (Game.hazards) Game.hazards.update(dt);
+    if (Game.weapons) Game.weapons.update(dt);
     Game.particles.update();
     Game.hud.update();
     
@@ -303,6 +313,7 @@ function updateGame(dt) {
     if (Game.powerUpManager) {
         Game.powerUpManager.update();
     }
+    if (Game.challenges) Game.challenges.update();
     
     // ✅ NOVO: Atualiza achievements (verifica conquistas)
     if (Game.achievements) {
@@ -331,7 +342,7 @@ function updateMenu(dt) {
 // ============================================
 function clearScreen() {
     const ctx=Game.ctx; ctx.clearRect(0,0,Game.width,Game.height);
-    const img=(Game.state==='MENU'||Game.state==='LEVEL_SELECT'||Game.state==='SETTINGS'||Game.state==='SHOP'||Game.state==='ACHIEVEMENTS'||Game.state==='LEADERBOARD'||Game.state==='STATISTICS') ? Game.assets?.image('menu') : Game.assets?.backgroundForLevel(Game.data.level);
+    const img=(Game.state==='MENU'||Game.state==='CAMPAIGN'||Game.state==='LEVEL_SELECT'||Game.state==='UPGRADE_TREE'||Game.state==='PRE_LEVEL'||Game.state==='SETTINGS'||Game.state==='SHOP'||Game.state==='ACHIEVEMENTS'||Game.state==='LEADERBOARD'||Game.state==='STATISTICS') ? Game.assets?.image('menu') : Game.assets?.backgroundForLevel(Game.data.level);
     if(img){ctx.drawImage(img,0,0,Game.width,Game.height);ctx.fillStyle='rgba(2,6,14,.34)';ctx.fillRect(0,0,Game.width,Game.height);}
     else{const gradient=ctx.createLinearGradient(0,0,0,Game.height);gradient.addColorStop(0,'#0a0a0f');gradient.addColorStop(1,'#1a1a2e');ctx.fillStyle=gradient;ctx.fillRect(0,0,Game.width,Game.height);}
 }
@@ -344,8 +355,17 @@ function renderCurrentState() {
         case 'SHOP':
             renderShop();
             break;
+        case 'CAMPAIGN':
+            if (Game.ui) Game.ui.drawCampaign();
+            break;
         case 'LEVEL_SELECT':
             if (Game.ui) Game.ui.drawLevelSelect();
+            break;
+        case 'UPGRADE_TREE':
+            if (Game.ui) Game.ui.drawUpgradeTree();
+            break;
+        case 'PRE_LEVEL':
+            if (Game.ui) Game.ui.drawPreLevel();
             break;
         case 'SETTINGS':
             if (Game.ui) Game.ui.drawSettings();
@@ -378,6 +398,10 @@ function renderCurrentState() {
             renderGame();
             if (Game.ui) Game.ui.drawPaused();
             break;
+        case 'WORLD_REWARD':
+            renderGame();
+            if (Game.ui) Game.ui.drawWorldReward();
+            break;
         case 'GAME_OVER':
             renderGame();
             if (Game.ui) Game.ui.drawGameOver();
@@ -401,7 +425,7 @@ function drawWorldAtmosphere() {
         ctx.globalAlpha=q==='HIGH'?.11:.06;ctx.fillStyle=world.accent;
         for(let y=80;y<Game.height;y+=q==='HIGH'?26:42)ctx.fillRect(0,y,Game.width,1);
     }
-    ctx.globalAlpha=1;ctx.strokeStyle=world.accent;ctx.globalAlpha=.18;ctx.strokeRect(8,58,Game.width-16,Game.height-70);ctx.restore();
+    ctx.globalAlpha=1;ctx.strokeStyle=world.accent;ctx.globalAlpha=.18;ctx.strokeRect(8,58,Game.width-16,Game.height-70);ctx.globalAlpha=.72;ctx.fillStyle=world.accent;ctx.font='600 10px Orbitron,Arial';ctx.textAlign='right';ctx.fillText(Game.hazards?.label()||'',Game.width-18,82);ctx.restore();
 }
 
 function renderGame() {
@@ -413,6 +437,7 @@ function renderGame() {
     
     // Ordem de renderização (back to front)
     drawWorldAtmosphere();
+    if (Game.hazards) Game.hazards.draw();
     Game.brickManager.draw();
     Game.particles.draw();
     Game.paddle.draw();
@@ -444,12 +469,12 @@ function renderGame() {
     }
     
     // ✅ NOVO: Desenha power-ups
-    if (Game.powerUpManager) {
-        Game.powerUpManager.draw();
-    }
+    if (Game.powerUpManager) { Game.powerUpManager.draw(); }
+    if (Game.weapons) Game.weapons.draw();
     
     Game.hud.draw();
     if (Game.bossSystem) Game.bossSystem.draw();
+    if (Game.challenges) Game.challenges.drawHUD();
     
     // ✅ NOVO: Desenha notificações de conquistas (por cima de tudo)
     if (Game.achievements) {
@@ -547,7 +572,7 @@ if (initializeGame()) {
     // Mensagem de boas-vindas
     setTimeout(() => {
         if (Game.state === 'MENU') {
-            console.log('%c🎮 BREAKOUT EVOLUTION v0.4.3', 'color: #00d2ff; font-size: 20px; font-weight: bold');
+            console.log('%c🎮 BREAKOUT EVOLUTION v0.4.6', 'color: #00d2ff; font-size: 20px; font-weight: bold');
             console.log('%cControles:', 'color: #FFD700; font-weight: bold');
             console.log('  Movimento: ← → ou A D ou Mouse');
             console.log('  Lançar: SPACE');

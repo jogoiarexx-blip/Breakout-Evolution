@@ -1,25 +1,14 @@
-# Breakout Evolution v0.4.3
+# Breakout Evolution v0.4.6
 
-Evolução modular do Breakout.
+Evolução modular do Breakout com campanha de 25 fases dividida em 5 mundos.
 
-## Novidades da 0.4.3
-- 5 mundos temáticos com identidade e distribuição de blocos próprias.
-- Tela de seleção de fases com desbloqueio persistente.
-- Mini-boss a cada 5 fases e boss maior a cada 10.
-- Barra de vida para encontros especiais.
-- Progressão salva em localStorage.
-- Mantidos gráficos AUTO/LOW/MEDIUM/HIGH, dificuldade e loading por fase da 0.4.1.
-- Estrutura modular preservada.
+## Destaques da v0.4.6
+- Tela de campanha com 5 mundos, bosses, estrelas e ranking.
+- Árvore de melhorias permanentes usando Pontos de Estrela.
+- Melhorias reais: paddle, vidas, chance de power-up, moedas e estabilidade da bola.
+- Modificadores pré-fase: Padrão, Fortuna, Arsenal, Guardião e Overdrive.
+- Conquistas/ranks de mundo por quantidade de estrelas.
+- Progressão e compras persistidas no localStorage.
+- Mantém gráficos Auto/Baixo/Médio/Alto, dificuldades, bosses, hazards, laser e loading por fase.
 
-## Controles
-Setas/WASD: navegar/mover. Enter/Espaço: confirmar/lançar. P: pausa. Esc: voltar.
-
-## Novidades v0.4.3
-- Sistema de bosses modular em `js/systems/boss-system.js`.
-- Introdução especial antes de mini-bosses e bosses.
-- Ataques por pulso, chuva de energia e laser.
-- Núcleos de boss se movem durante a luta.
-- Três fases de agressividade conforme a vida do boss cai.
-- Recompensas persistentes por primeira vitória.
-- Boss principal concede +1 vida máxima permanente (limite 8).
-- Ataques respeitam pausa, loading e estado do jogo.
+Abra `index.html` em um servidor local para jogar.

@@ -4,6 +4,9 @@ class UI {
         this.menuOption = 0;
         this.shopOption = 0;
         this.levelSelectOption = 0;
+        this.campaignWorld = 0;
+        this.treeOption = 0;
+        this.pendingLevel = 1;
         this.lastInputTime = 0;
         this.inputDelay = 150; // ms entre inputs
         
@@ -29,14 +32,26 @@ class UI {
                 case 'SHOP':
                     this.handleShopInput(e);
                     break;
+                case 'CAMPAIGN':
+                    this.handleCampaignInput(e);
+                    break;
                 case 'LEVEL_SELECT':
                     this.handleLevelSelectInput(e);
+                    break;
+                case 'UPGRADE_TREE':
+                    this.handleUpgradeTreeInput(e);
+                    break;
+                case 'PRE_LEVEL':
+                    this.handlePreLevelInput(e);
                     break;
                 case 'SETTINGS':
                     this.handleSettingsInput(e);
                     break;
                 case 'PAUSED':
                     this.handlePausedInput(e);
+                    break;
+                case 'WORLD_REWARD':
+                    this.handleWorldRewardInput(e);
                     break;
                 case 'GAME_OVER':
                     this.handleGameOverInput(e);
@@ -50,48 +65,25 @@ class UI {
     }
 
     handleMenuInput(e) {
-        const maxOptions = 8; // menu principal
-        
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-            this.menuOption = Math.max(0, this.menuOption - 1);
-        }
-        if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-            this.menuOption = Math.min(maxOptions - 1, this.menuOption + 1);
-        }
-        if (e.key === 'Enter' || e.code === 'Space') {
-            this.selectMenuOption();
-        }
+        const maxOptions = 9, cols = 3;
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.menuOption = Math.max(0, this.menuOption - 1);
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.menuOption = Math.min(maxOptions - 1, this.menuOption + 1);
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') this.menuOption = Math.max(0, this.menuOption - cols);
+        if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') this.menuOption = Math.min(maxOptions - 1, this.menuOption + cols);
+        if (e.key === 'Enter' || e.code === 'Space') this.selectMenuOption();
     }
 
     selectMenuOption() {
         switch(this.menuOption) {
-            case 0: // Jogar
-                Game.state = 'LEVEL_SELECT';
-                this.levelSelectOption = Math.max(0, Math.min((Game.progression?.maxSelectable()||1)-1, (Game.data.level||1)-1));
-                break;
-            case 1: // Loja
-                Game.state = 'SHOP';
-                this.shopOption = 0;
-                break;
-            case 2: // Conquistas
-                Game.state = 'ACHIEVEMENTS';
-                break;
-            case 3: // Placar
-                Game.state = 'LEADERBOARD';
-                break;
-            case 4: // Estatísticas
-                Game.state = 'STATISTICS';
-                break;
-            case 5: // Configurações
-                Game.state = 'SETTINGS';
-                this.settingsOption = 0;
-                break;
-            case 6: // Controles
-                this.showControls();
-                break;
-            case 7: // Créditos
-                this.showCredits();
-                break;
+            case 0: Game.state='CAMPAIGN'; this.campaignWorld=Math.min(4,Game.worlds?.worldIndex(Game.data.level||1)||0); break;
+            case 1: Game.state='SHOP'; this.shopOption=0; break;
+            case 2: Game.state='UPGRADE_TREE'; this.treeOption=0; break;
+            case 3: Game.state='ACHIEVEMENTS'; break;
+            case 4: Game.state='LEADERBOARD'; break;
+            case 5: Game.state='STATISTICS'; break;
+            case 6: Game.state='SETTINGS'; this.settingsOption=0; break;
+            case 7: this.showControls(); break;
+            case 8: this.showCredits(); break;
         }
     }
 
@@ -121,7 +113,8 @@ class UI {
             const rewards = JSON.parse(localStorage.getItem('breakout_boss_rewards_v043') || '{}');
             bossLifeBonus = Object.keys(rewards).filter(k => rewards[k] && Number(k.split('_')[1]) % 10 === 0).length;
         } catch (e) {}
-        Game.data.maxLives = Math.min(8, difficulty.lives + bossLifeBonus);
+        const metaLives=Game.meta?Game.meta.effects().extraLives:0;
+        Game.data.maxLives = Math.min(10, difficulty.lives + bossLifeBonus + metaLives);
         Game.data.lives = Game.data.maxLives;
         
         // ✅ STATS: Registra início de jogo
@@ -129,7 +122,7 @@ class UI {
             Game.stats.recordGameStart();
         }
         
-        const prepare = () => { Game.brickManager.loadLevel(startLevel); Game.ball.reset(); Game.paddle.reset(); };
+        const prepare = () => { Game.brickManager.loadLevel(startLevel); Game.paddle.reset(); Game.paddle.applyUpgrades(); Game.ball.reset(); if(Game.runModifiers?.effects().startLaser) setTimeout(()=>Game.weapons?.activate(8000),250); };
         if (Game.levelLoader) { Game.levelLoader.load(startLevel, prepare); } else { prepare(); Game.state = 'PLAYING'; }
         
         if (Game.hud) {
@@ -139,9 +132,8 @@ class UI {
         }
         
         // ✅ POWER-UPS: Limpa power-ups ativos
-        if (Game.powerUpManager) {
-            Game.powerUpManager.clear();
-        }
+        if (Game.powerUpManager) Game.powerUpManager.clear();
+        if (Game.weapons) Game.weapons.clear();
         
         // ✅ FIX: Cancela timers de power-ups de duração pendentes da partida anterior
         if (Game.activePowerUpTimers) {
@@ -152,13 +144,85 @@ class UI {
         if (!Game.levelLoader) Game.state = 'PLAYING';
     }
 
+    handleCampaignInput(e) {
+        if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') this.campaignWorld=Math.max(0,this.campaignWorld-1);
+        if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') this.campaignWorld=Math.min(4,this.campaignWorld+1);
+        if(e.key==='Enter'||e.code==='Space'){
+            const first=this.campaignWorld*5+1, max=Math.min(25,Game.progression?.maxSelectable()||1);
+            this.levelSelectOption=Math.min(max-1,Math.max(first-1,0)); Game.state='LEVEL_SELECT';
+        }
+        if(e.key==='t'||e.key==='T'){this.treeOption=0;Game.state='UPGRADE_TREE';}
+        if(e.key==='Escape')Game.state='MENU';
+    }
+
+    drawCampaign(){
+        const c=Game.ctx;c.save();c.fillStyle='rgba(2,7,15,.80)';c.fillRect(0,0,Game.width,Game.height);
+        c.textAlign='center';c.font='900 34px Orbitron,Arial';c.fillStyle='#eafaff';c.fillText('CAMPANHA',Game.width/2,54);
+        const total=Game.progression?.totalStars()||0, pct=Game.progression?.completionPercent()||0;
+        c.font='600 14px Rajdhani,Arial';c.fillStyle='#9bb5c6';c.fillText(`${total}/75 ESTRELAS  •  ${pct}% CONCLUÍDO  •  RANK ${Game.progression?.starRank()||'RECRUTA'}`,Game.width/2,80);
+        const y=122,w=136,h=330,gap=10,start=40;
+        for(let i=0;i<5;i++){
+            const world=Game.worlds.worlds[i],x=start+i*(w+gap),sel=i===this.campaignWorld,stars=Game.progression?.worldStars(i+1)||0,unlocked=(Game.progression?.maxSelectable()||1)>i*5;
+            c.fillStyle=sel?'rgba(0,210,255,.16)':unlocked?'rgba(5,14,25,.86)':'rgba(3,6,11,.82)';c.fillRect(x,y,w,h);
+            c.strokeStyle=sel?world.accent:unlocked?'rgba(130,170,195,.32)':'#182531';c.lineWidth=sel?3:1;c.strokeRect(x,y,w,h);
+            c.fillStyle=unlocked?world.accent:'#425462';c.fillRect(x,y,w,8);
+            c.font='800 16px Orbitron,Arial';c.fillStyle=unlocked?'#f1fbff':'#536470';c.textAlign='center';c.fillText(`MUNDO ${i+1}`,x+w/2,y+42);
+            c.font='700 12px Rajdhani,Arial';c.fillStyle=unlocked?world.accent:'#465761';c.fillText(world.name,x+w/2,y+66);
+            c.font='600 11px Rajdhani,Arial';c.fillStyle='#8aa0b0';c.fillText(world.subtitle,x+w/2,y+87);
+            c.font='900 24px Arial';c.fillStyle=unlocked?'#ffd45a':'#37444c';c.fillText('★'.repeat(Math.round(stars/5)).padEnd(3,'☆'),x+w/2,y+137);
+            c.font='700 13px Orbitron,Arial';c.fillStyle=unlocked?'#d9e8ef':'#4a5962';c.fillText(`${stars}/15`,x+w/2,y+163);
+            c.font='600 12px Rajdhani,Arial';c.fillStyle='#78909f';c.fillText(`FASES ${i*5+1}-${i*5+5}`,x+w/2,y+200);
+            const boss=(i+1)*5;c.font='700 12px Orbitron,Arial';c.fillStyle=world.accent;c.fillText(boss%10===0?'BOSS PRINCIPAL':'MINI-BOSS',x+w/2,y+230);
+            c.font='900 34px Arial';c.fillStyle=unlocked?world.accent:'#34434c';c.fillText(boss%10===0?'◆':'◇',x+w/2,y+276);
+            c.font='600 11px Rajdhani,Arial';c.fillStyle=Game.progression?.worldCompleted(i+1)?'#7dffcf':'#738997';const ach=Game.progression?.worldAchievement(i+1);c.fillText(unlocked?`${ach?.icon||'◇'} ${ach?.name||'EM PROGRESSO'}`:'BLOQUEADO',x+w/2,y+311);
+        }
+        c.fillStyle='rgba(0,0,0,.5)';c.fillRect(110,478,580,68);c.strokeStyle='rgba(255,255,255,.1)';c.strokeRect(110,478,580,68);
+        c.font='700 13px Orbitron,Arial';c.fillStyle='#ffd166';c.fillText(`PONTOS DE ESTRELA DISPONÍVEIS: ${Game.meta?.available()||0}`,Game.width/2,503);
+        c.font='600 12px Rajdhani,Arial';c.fillStyle='#78909f';c.fillText('←→ escolher mundo • ENTER fases • T árvore de melhorias • ESC menu',Game.width/2,529);c.restore();
+    }
+
+    handleUpgradeTreeInput(e){
+        const max=Game.meta?.nodes.length||1;
+        if(e.key==='ArrowUp'||e.key==='w'||e.key==='W')this.treeOption=Math.max(0,this.treeOption-1);
+        if(e.key==='ArrowDown'||e.key==='s'||e.key==='S')this.treeOption=Math.min(max-1,this.treeOption+1);
+        if(e.key==='Enter'||e.code==='Space'){const n=Game.meta?.nodes[this.treeOption];if(n&&Game.meta.buy(n.id)){Game.paddle?.applyUpgrades();Game.hud?.addNotification('MELHORIA DESBLOQUEADA','#7dffcf',2);} }
+        if(e.key==='Escape')Game.state='MENU';
+    }
+
+    drawUpgradeTree(){
+        const c=Game.ctx;c.save();c.fillStyle='rgba(3,8,16,.91)';c.fillRect(0,0,Game.width,Game.height);c.textAlign='center';
+        c.font='900 32px Orbitron,Arial';c.fillStyle='#eaffff';c.fillText('ÁRVORE DE ESTRELAS',Game.width/2,52);
+        c.font='600 14px Rajdhani,Arial';c.fillStyle='#ffd166';c.fillText(`TOTAL ${Game.meta?.totalStars()||0}  •  DISPONÍVEIS ${Game.meta?.available()||0}  •  INVESTIDOS ${Game.meta?.data.spent||0}`,Game.width/2,79);
+        (Game.meta?.nodes||[]).forEach((n,i)=>{const y=112+i*82,sel=i===this.treeOption,lv=Game.meta.level(n.id),cost=Game.meta.nextCost(n.id);c.fillStyle=sel?'rgba(0,210,255,.14)':'rgba(255,255,255,.035)';c.fillRect(90,y,620,64);c.strokeStyle=sel?'#00d2ff':'#243646';c.strokeRect(90,y,620,64);c.textAlign='left';c.font='700 15px Orbitron,Arial';c.fillStyle=sel?'#fff':'#bfd0da';c.fillText(n.name,110,y+23);c.font='600 13px Rajdhani,Arial';c.fillStyle='#8098a8';c.fillText(n.desc,110,y+46);c.textAlign='right';c.font='700 14px Orbitron,Arial';c.fillStyle=lv>=n.max?'#7dffcf':(Game.meta.available()>=cost?'#ffd166':'#ff6b6b');c.fillText(lv>=n.max?`NÍVEL ${lv}/${n.max}  MÁXIMO`:`NÍVEL ${lv}/${n.max}  •  ${cost} ★`,690,y+36);});
+        c.textAlign='center';c.font='600 12px Rajdhani,Arial';c.fillStyle='#718899';c.fillText('↑↓ selecionar • ENTER investir pontos • ESC voltar',Game.width/2,566);c.restore();
+    }
+
+    handlePreLevelInput(e){
+        if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')Game.runModifiers?.cycle(-1);
+        if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')Game.runModifiers?.cycle(1);
+        if(e.key==='Enter'||e.code==='Space')this.startGame(this.pendingLevel||1);
+        if(e.key==='Escape')Game.state='LEVEL_SELECT';
+    }
+
+    drawPreLevel(){
+        const c=Game.ctx,l=this.pendingLevel||1,w=Game.worlds?.get(l),m=Game.runModifiers?.current();c.save();c.fillStyle='rgba(2,7,15,.9)';c.fillRect(0,0,Game.width,Game.height);c.textAlign='center';
+        c.font='900 30px Orbitron,Arial';c.fillStyle=w?.accent||'#00d2ff';c.fillText(`FASE ${String(l).padStart(2,'0')}`,Game.width/2,76);c.font='700 16px Orbitron,Arial';c.fillStyle='#eaf7ff';c.fillText(w?.name||'',Game.width/2,105);
+        c.font='600 13px Rajdhani,Arial';c.fillStyle='#7895a7';c.fillText('ESCOLHA UM MODIFICADOR PARA ESTA TENTATIVA',Game.width/2,150);
+        c.fillStyle='rgba(255,255,255,.05)';c.fillRect(145,188,510,210);c.strokeStyle=m?.accent||'#00d2ff';c.lineWidth=2;c.strokeRect(145,188,510,210);
+        c.font='900 26px Orbitron,Arial';c.fillStyle=m?.accent||'#fff';c.fillText(`◀  ${m?.name||'PADRÃO'}  ▶`,Game.width/2,248);
+        c.font='600 17px Rajdhani,Arial';c.fillStyle='#d5e5ed';c.fillText(m?.desc||'',Game.width/2,293);
+        const stars=Game.progression?.stars(l)||0;c.font='900 30px Arial';c.fillStyle='#ffd45a';c.fillText('★'.repeat(stars)+'☆'.repeat(3-stars),Game.width/2,347);
+        c.font='600 13px Rajdhani,Arial';c.fillStyle='#7895a7';c.fillText('Melhor resultado desta fase',Game.width/2,374);
+        c.font='700 13px Orbitron,Arial';c.fillStyle='#7dffcf';c.fillText('ENTER INICIAR',Game.width/2,462);c.font='600 12px Rajdhani,Arial';c.fillStyle='#718899';c.fillText('←→ trocar modificador • ESC voltar às fases',Game.width/2,493);c.restore();
+    }
+
     handleLevelSelectInput(e) {
         const max = Math.min(25, Game.progression?.maxSelectable() || 1);
         if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.levelSelectOption=Math.max(0,this.levelSelectOption-1);
         if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.levelSelectOption=Math.min(max-1,this.levelSelectOption+1);
         if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') this.levelSelectOption=Math.max(0,this.levelSelectOption-5);
         if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') this.levelSelectOption=Math.min(max-1,this.levelSelectOption+5);
-        if (e.key === 'Enter' || e.code === 'Space') this.startGame(this.levelSelectOption+1);
+        if (e.key === 'Enter' || e.code === 'Space') { this.pendingLevel=this.levelSelectOption+1; Game.state='PRE_LEVEL'; }
         if (e.key === 'Escape') Game.state='MENU';
     }
 
@@ -174,10 +238,33 @@ class UI {
             ctx.strokeStyle=sel?'#00d2ff':unlocked?(world?.accent||'#456'):'#1a2733';ctx.lineWidth=sel?2:1;ctx.strokeRect(x,y,boxW,boxH);
             ctx.textAlign='left';ctx.font='700 15px Orbitron,Arial';ctx.fillStyle=unlocked?'#e8f5fb':'#40515c';ctx.fillText(unlocked?`FASE ${String(level).padStart(2,'0')}`:'🔒 BLOQUEADA',x+10,y+23);
             ctx.font='600 11px Rajdhani,Arial';ctx.fillStyle=unlocked?(world?.accent||'#789'):'#33434d';ctx.fillText(unlocked?(special||`MUNDO ${Game.worlds?.worldIndex(level)+1}`):'—',x+10,y+44);
-            if(Game.progression?.data.completed?.includes(level)){ctx.textAlign='right';ctx.fillStyle='#77ffb0';ctx.fillText('✓',x+boxW-10,y+23);}
+            if(Game.progression?.data.completed?.includes(level)){ctx.textAlign='right';ctx.fillStyle='#77ffb0';ctx.fillText('✓',x+boxW-10,y+23);const st=Game.progression.stars(level);ctx.font='700 12px Arial';ctx.fillStyle='#ffd45a';ctx.fillText('★'.repeat(st)+'☆'.repeat(3-st),x+boxW-10,y+48);}
         }
         const lvl=this.levelSelectOption+1,w=Game.worlds?.get(lvl);ctx.textAlign='center';ctx.font='700 16px Orbitron,Arial';ctx.fillStyle=w?.accent||'#00d2ff';ctx.fillText(w?`${w.name} — ${w.subtitle}`:'',Game.width/2,565);
         ctx.font='12px Rajdhani,Arial';ctx.fillStyle='#617889';ctx.fillText('SETAS/WASD navegar • ENTER jogar • ESC voltar',Game.width/2,590);
+    }
+
+    handleWorldRewardInput(e) {
+        if (e.key === 'Enter' || e.code === 'Space') {
+            const r=Game.pendingReward;if(!r)return;
+            const next=r.nextLevel; if(r.level>=25){Game.pendingReward=null;Game.state='MENU';this.menuOption=0;return;} Game.pendingReward=null;
+            const go=()=>{Game.brickManager.loadLevel(next);Game.ball.reset();if(Game.paddle)Game.paddle.reset();Game.brickManager.levelCompleting=false;};
+            if(Game.levelLoader) Game.levelLoader.load(next,go); else {go();Game.state='PLAYING';}
+        }
+        if (e.key === 'Escape') { Game.pendingReward=null; Game.state='MENU'; }
+    }
+
+    drawWorldReward() {
+        const r=Game.pendingReward;if(!r)return;const ctx=Game.ctx,w=Game.worlds?.get(r.level);
+        ctx.save();ctx.fillStyle='rgba(2,6,14,.88)';ctx.fillRect(0,0,Game.width,Game.height);
+        ctx.textAlign='center';ctx.font='900 38px Orbitron,Arial';ctx.fillStyle=w?.accent||'#00d2ff';ctx.fillText('MUNDO CONCLUÍDO',Game.width/2,105);
+        ctx.font='700 20px Orbitron,Arial';ctx.fillStyle='#fff';ctx.fillText(w?.name||('Mundo '+r.world),Game.width/2,145);
+        ctx.font='900 54px Arial';ctx.fillStyle='#ffd45a';ctx.fillText('★'.repeat(r.stars)+'☆'.repeat(3-r.stars),Game.width/2,225);
+        ctx.font='700 17px Rajdhani,Arial';ctx.fillStyle='#b9d5e5';ctx.fillText(r.challengeDone?'DESAFIO CONCLUÍDO: '+r.challenge:'DESAFIO NÃO CONCLUÍDO: '+r.challenge,Game.width/2,265);
+        ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(190,300,420,125);ctx.strokeStyle='rgba(255,255,255,.16)';ctx.strokeRect(190,300,420,125);
+        ctx.font='700 18px Orbitron,Arial';ctx.fillStyle='#7dffcf';ctx.fillText('RECOMPENSAS',Game.width/2,332);
+        ctx.font='600 18px Rajdhani,Arial';ctx.fillStyle='#fff';ctx.fillText(`+${r.coins} moedas`,Game.width/2,365);ctx.fillText(r.firstClaim?'Bônus de primeira conquista aplicado':'Recompensa do mundo já coletada antes',Game.width/2,394);const ach=Game.progression?.worldAchievement(r.world);ctx.font='700 13px Orbitron,Arial';ctx.fillStyle=w?.accent||'#ffd166';ctx.fillText(`SELO: ${ach?.icon||'◇'} ${ach?.name||'CONQUISTADO'}  •  RANK ${Game.progression?.starRank()||'RECRUTA'}`,Game.width/2,422);
+        ctx.font='600 13px Rajdhani,Arial';ctx.fillStyle='#7fa4b7';ctx.fillText('ENTER continuar • ESC menu',Game.width/2,490);ctx.restore();
     }
 
     handleShopInput(e) {
@@ -272,7 +359,7 @@ class UI {
             '• Combo System\n' +
             '• Particle Effects\n' +
             '• Progressive Difficulty\n\n' +
-            'Breakout Evolution v0.4.3'
+            'Breakout Evolution v0.4.6'
         );
     }
 
@@ -308,10 +395,10 @@ class UI {
         ctx.textAlign='center';ctx.font='900 58px Orbitron, Arial';ctx.fillStyle='#dff8ff';
         if(!Game.settings || Game.settings.shadows()){ctx.shadowBlur=24;ctx.shadowColor='#00d2ff';}
         ctx.fillText('BREAKOUT',Game.width/2,98);ctx.shadowBlur=0;
-        ctx.font='700 18px Orbitron, Arial';ctx.fillStyle='#00d2ff';ctx.fillText('EVOLUTION',Game.width/2,130);ctx.font='600 11px Orbitron, Arial';ctx.fillStyle='#ffd166';ctx.fillText('v0.4.3',Game.width/2,149);
+        ctx.font='700 18px Orbitron, Arial';ctx.fillStyle='#00d2ff';ctx.fillText('EVOLUTION',Game.width/2,130);ctx.font='600 11px Orbitron, Arial';ctx.fillStyle='#ffd166';ctx.fillText('v0.4.6',Game.width/2,149);
         ctx.font='14px Rajdhani, Arial';ctx.fillStyle='#7f9aaa';ctx.fillText('ARCADE • UPGRADES • POWER-UPS',Game.width/2,172);
-        const options=['▶  JOGAR','◆  LOJA','★  CONQUISTAS','▣  PLACAR','⌁  ESTATÍSTICAS','⚙  CONFIGURAÇÕES','⌨  CONTROLES','ⓘ  CRÉDITOS'];
-        const cols=2,startX=Game.width/2-174,startY=224,w=330,h=48,gapX=18,gapY=14;
+        const options=['▶ CAMPANHA','◆ LOJA','✦ MELHORIAS','★ CONQUISTAS','▣ PLACAR','⌁ ESTATÍSTICAS','⚙ CONFIGURAÇÕES','⌨ CONTROLES','ⓘ CRÉDITOS'];
+        const cols=3,startX=48,startY=220,w=226,h=48,gapX=13,gapY=14;
         options.forEach((text,i)=>{const col=i%cols,row=Math.floor(i/cols),x=startX+col*(w+gapX),y=startY+row*(h+gapY),sel=i===this.menuOption;
             ctx.fillStyle=sel?'rgba(0,210,255,.16)':'rgba(5,12,22,.72)';ctx.fillRect(x,y,w,h);ctx.strokeStyle=sel?'#00d2ff':'rgba(104,146,170,.28)';ctx.lineWidth=sel?2:1;ctx.strokeRect(x,y,w,h);
             ctx.textAlign='left';ctx.font=sel?'700 18px Orbitron, Arial':'600 17px Rajdhani, Arial';ctx.fillStyle=sel?'#ffd166':'#c9d5df';ctx.fillText(text,x+18,y+30);

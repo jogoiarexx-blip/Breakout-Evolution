@@ -17,7 +17,9 @@ class Ball {
         const speedBonus = Game.economy ? Game.economy.getEffect('ballSpeed') : 0;
         const difficulty = Game.settings ? Game.settings.difficulty() : CONFIG.DIFFICULTY.NORMAL;
         const worldMultiplier = Game.worlds ? Game.worlds.difficultyMultiplier(Game.data?.level || 1) : 1;
-        const baseSpeed = (CONFIG.BALL.SPEED + speedBonus) * difficulty.ballSpeed * worldMultiplier;
+        const metaMult=Game.meta?Game.meta.effects().ballSpeedMultiplier:1;
+        const runMult=Game.runModifiers?Game.runModifiers.effects().ballSpeed:1;
+        const baseSpeed = (CONFIG.BALL.SPEED + speedBonus) * difficulty.ballSpeed * worldMultiplier * metaMult * runMult;
         
         // Ângulo aleatório inicial (evita sempre mesmo padrão)
         const angle = (Math.random() * Math.PI / 3) - Math.PI / 6; // ±30 graus

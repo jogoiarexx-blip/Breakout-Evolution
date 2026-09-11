@@ -42,7 +42,9 @@ class Paddle {
         const oldWidth = this.width || this.baseWidth;
         
         const bonus = Game.economy ? Game.economy.getEffect('paddleWidth') : 0;
-        this.width = this.baseWidth + bonus;
+        const meta = Game.meta ? Game.meta.effects() : {paddleWidth:0};
+        const run = Game.runModifiers ? Game.runModifiers.effects() : {paddleWidth:0};
+        this.width = this.baseWidth + bonus + (meta.paddleWidth||0) + (run.paddleWidth||0);
         
         // ✅ FIX: Ajusta posição para manter centralizado
         if (oldWidth) {

@@ -163,7 +163,7 @@ class Brick {
 
     onDestroy() {
         // Atualiza pontuação e moedas
-        Game.data.score += this.stats.points;
+        Game.data.score += Math.floor(this.stats.points * (Game.runModifiers?Game.runModifiers.effects().scoreMultiplier:1));
         if (Game.economy) {
             Game.economy.addCoins(this.stats.coins);
         }
@@ -251,7 +251,7 @@ class Brick {
             
             if (brick.currentHits <= 0) {
                 brick.destroyed = true;
-                Game.data.score += brick.stats.points;
+                Game.data.score += Math.floor(brick.stats.points * (Game.runModifiers?Game.runModifiers.effects().scoreMultiplier:1));
                 if (Game.economy) {
                     Game.economy.addCoins(brick.stats.coins);
                 }
@@ -855,6 +855,8 @@ class BrickManager {
                 }
             }
             if (Game.bossSystem) Game.bossSystem.start(level);
+            if (Game.hazards) Game.hazards.start(level);
+            if (Game.challenges) Game.challenges.start(level);
             
             // Registra início de nível nas estatísticas
             if (Game.stats) {
@@ -970,11 +972,12 @@ class BrickManager {
         
         const currentLevel = Game.data.level;
         if (Game.bossSystem && currentLevel % 5 === 0) Game.bossSystem.onDefeated();
-        if (Game.progression) Game.progression.complete(currentLevel);
+        const result=Game.challenges?Game.challenges.finish(currentLevel):{stars:1,challenge:'',challengeDone:false};
+        if (Game.progression) Game.progression.complete(currentLevel,result);
         Game.data.level++;
         
         const bonus = 100 * currentLevel;
-        Game.data.score += bonus;
+        Game.data.score += Math.floor(bonus * (Game.runModifiers?Game.runModifiers.effects().scoreMultiplier:1));
         Game.economy.addCoins(Math.floor(bonus / 10));
         
         // ✅ STATS: Registra level completo
@@ -1005,6 +1008,15 @@ class BrickManager {
         Game.particles.emit(Game.width / 2, Game.height / 2, 50, '#FFD700');
         
         const nextLevel = Game.data.level;
+        if(currentLevel % 5 === 0 && currentLevel <= 25){
+            const world=Math.ceil(currentLevel/5);
+            const firstClaim=Game.progression?Game.progression.claimWorld(world):true;
+            const rewardCoins=firstClaim?(150*world):25;
+            Game.economy.addCoins(rewardCoins);
+            Game.pendingReward={level:currentLevel,nextLevel,world,stars:result.stars,challenge:result.challenge,challengeDone:result.challengeDone,coins:rewardCoins,firstClaim};
+            setTimeout(()=>{Game.state='WORLD_REWARD';},500);
+            return;
+        }
         const startNext = () => {
             this.loadLevel(nextLevel);
             Game.ball.reset();

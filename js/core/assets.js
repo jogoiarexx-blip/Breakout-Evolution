@@ -9,7 +9,7 @@ class AssetManager {
     this.levelManifests={};
     for(let i=1;i<=5;i++) this.levelManifests[i]={background:`assets/images/backgrounds/level-${i}.webp`,music:`assets/audio/music/level-${i}.wav`};
     this.bricks=['normal','strong','metal','diamond','explosive','coin','mystery'];
-    this.powerups=['multiball','expand','life','slow','fireball','shield'];
+    this.powerups=['multiball','expand','life','slow','fireball','shield']; // laser/overcharge usam fallback vetorial premium
   }
   async loadImage(key,url){ if(this.images.has(key)) return this.images.get(key); return new Promise(resolve=>{const img=new Image();img.onload=()=>{this.images.set(key,img);resolve(img)};img.onerror=()=>resolve(null);img.src=url;}); }
   async preloadShared(progress=()=>{}){

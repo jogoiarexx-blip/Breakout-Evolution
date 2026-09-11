@@ -1,6 +1,7 @@
 // powerups.js - Sistema de Power-ups
 const POWERUPS = {
     multiball: {
+        rarity: 'rare',
         name: "Multi-Bola",
         icon: '⚽',
         color: '#4CAF50',
@@ -29,6 +30,7 @@ const POWERUPS = {
     },
     
     widePaddle: {
+        rarity: 'common',
         name: "Paddle Largo",
         icon: '📏',
         color: '#2196F3',
@@ -58,6 +60,7 @@ const POWERUPS = {
     },
     
     fireball: {
+        rarity: 'rare',
         name: "Bola de Fogo",
         icon: '🔥',
         color: '#FF5722',
@@ -73,6 +76,7 @@ const POWERUPS = {
     },
     
     slowmo: {
+        rarity: 'rare',
         name: "Slow Motion",
         icon: '⏱️',
         color: '#9C27B0',
@@ -92,6 +96,7 @@ const POWERUPS = {
     },
     
     extraLife: {
+        rarity: 'legendary',
         name: "Vida Extra",
         icon: '❤️',
         color: '#E91E63',
@@ -107,6 +112,7 @@ const POWERUPS = {
     },
     
     coinRain: {
+        rarity: 'common',
         name: "Chuva de Moedas",
         icon: '💰',
         color: '#FFD700',
@@ -126,6 +132,7 @@ const POWERUPS = {
     },
     
     shield: {
+        rarity: 'epic',
         name: "Escudo",
         icon: '🛡️',
         color: '#FFC107',
@@ -138,7 +145,18 @@ const POWERUPS = {
         onEnd: (game) => {
             game.paddle.hasShield = false;
         }
+    },
+    laser: {
+        rarity: 'epic', name: 'Canhão Laser', icon: '⚡', color: '#ff4fd8', dropChance: 0.02, duration: 12000,
+        effect: (game) => { if(game.weapons) game.weapons.activate(12000); if(game.audio) game.audio.play('powerup'); },
+        onEnd: (game) => { if(game.weapons) game.weapons.enabled=false; }
+    },
+    overcharge: {
+        rarity: 'legendary', name: 'Overcharge', icon: '✦', color: '#7dffcf', dropChance: 0.012, duration: 9000,
+        effect: (game) => { game.ball.fireball=true; if(game.weapons) game.weapons.activate(9000); if(game.audio) game.audio.play('powerup'); },
+        onEnd: (game) => { game.ball.fireball=false; if(game.weapons) game.weapons.enabled=false; }
     }
+
 };
 
 class PowerUp {
@@ -201,6 +219,9 @@ class PowerUp {
         
         // Ativa efeito
         this.data.effect(Game);
+        const rarityNames={common:'COMUM',rare:'RARO',epic:'ÉPICO',legendary:'LENDÁRIO'};
+        const rarityColors={common:'#dce7ee',rare:'#59b7ff',epic:'#d66bff',legendary:'#ffd45a'};
+        if(Game.hud) Game.hud.addNotification(`${rarityNames[this.data.rarity||'common']} • ${this.data.name}`,rarityColors[this.data.rarity||'common'],1.8);
         
         // Se tem duração, agenda fim do efeito
         if (this.data.duration > 0) {
@@ -222,7 +243,7 @@ class PowerUp {
     
     draw() {
         const ctx = Game.ctx;
-        const assetKey={multiball:'multiball',widePaddle:'expand',extraLife:'life',slowmo:'slow',fireball:'fireball',shield:'shield'}[this.type];
+        const assetKey={multiball:'multiball',widePaddle:'expand',extraLife:'life',slowmo:'slow',fireball:'fireball',shield:'shield',laser:'laser',overcharge:'overcharge'}[this.type];
         const sprite=assetKey?Game.assets?.image(`power-${assetKey}`):null;
         if(sprite){
             const pulse=Game.settings?.effectiveGraphics==='LOW'?1:1+Math.sin(this.glowPhase)*.08;
@@ -273,16 +294,20 @@ class PowerUpManager {
     }
     
     trySpawnFromBrick(brick) {
-        // Rola chance de dropar power-up
-        const powerupTypes = Object.keys(POWERUPS);
-        
-        for (let type of powerupTypes) {
-            const powerup = POWERUPS[type];
-            if (Math.random() < powerup.dropChance) {
-                this.spawn(brick.x + brick.width / 2, brick.y + brick.height / 2, type);
-                return; // Só um power-up por brick
-            }
-        }
+        // v0.4.4: um único roll de drop + raridade ponderada evita excesso de itens.
+        let dropChance = 0.16;
+        if (Game.worlds?.isMiniBoss(Game.data.level)) dropChance = 0.24;
+        if (Game.worlds?.isBoss(Game.data.level)) dropChance = 0.30;
+        const metaBonus=Game.meta?Game.meta.effects().powerupChance:0;
+        const runBonus=Game.runModifiers?Game.runModifiers.effects().powerupChance:0;
+        dropChance=Math.min(.55,dropChance+metaBonus+runBonus);
+        if (Math.random() > dropChance) return;
+        const rarityRoll=Math.random();
+        const rarity=rarityRoll<0.58?'common':rarityRoll<0.84?'rare':rarityRoll<0.96?'epic':'legendary';
+        let pool=Object.keys(POWERUPS).filter(k=>(POWERUPS[k].rarity||'common')===rarity);
+        if(!pool.length) pool=Object.keys(POWERUPS);
+        const type=pool[Math.floor(Math.random()*pool.length)];
+        this.spawn(brick.x + brick.width / 2, brick.y + brick.height / 2, type);
     }
     
     spawn(x, y, type) {

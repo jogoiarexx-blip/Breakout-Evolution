@@ -104,8 +104,21 @@ class BossSystem {
     ctx.shadowBlur=0;
     for(const b of this.beams){if(b.warning>0){ctx.globalAlpha=.25+.2*Math.sin(this.timer*14);ctx.fillStyle='#ff3158';ctx.fillRect(b.x,70,b.w,Game.height-130);}else{ctx.globalAlpha=.75;ctx.fillStyle='#fff';ctx.fillRect(b.x,70,b.w,Game.height-130);ctx.globalAlpha=.8;ctx.fillStyle='#ff3158';ctx.fillRect(b.x+7,70,b.w-14,Game.height-130);}}
     ctx.globalAlpha=1;
+    this.drawWorldCore(ctx);
     if(Game.state==='BOSS_INTRO')this.drawIntro(ctx);ctx.restore();
   }
+  drawWorldCore(ctx){
+    const c=this.bossCenter(),wi=Game.worlds?.worldIndex(this.level)||0,q=Game.settings?.effectiveGraphics||'MEDIUM',t=this.timer;
+    const colors=['#00d2ff','#ff6238','#8ee7ff','#b388ff','#ffd166'];const color=colors[wi]||'#fff';
+    ctx.save();ctx.translate(c.x,c.y);ctx.rotate(t*(wi%2?-.45:.45));ctx.globalAlpha=.88;
+    if(q!=='LOW'){ctx.shadowBlur=18+(this.phase*4);ctx.shadowColor=color;}ctx.strokeStyle=color;ctx.fillStyle='rgba(5,10,18,.72)';ctx.lineWidth=3;
+    ctx.beginPath();
+    const sides=[6,5,4,8,3][wi]||6,rad=this.kind==='BOSS'?34:25;
+    for(let i=0;i<sides;i++){const a=-Math.PI/2+i*Math.PI*2/sides,x=Math.cos(a)*rad,y=Math.sin(a)*rad;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.rotate(-t*(wi%2?-.9:.9));ctx.fillStyle=color;ctx.globalAlpha=.34+.18*Math.sin(t*5);ctx.beginPath();ctx.arc(0,0,10+this.phase*2,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=.95;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,3+this.phase,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+
   drawIntro(ctx){
     const p=1-Math.max(0,this.intro)/this.introDuration;ctx.fillStyle=`rgba(0,0,0,${.68*(1-Math.max(0,p-.8)/.2)})`;ctx.fillRect(0,0,Game.width,Game.height);
     ctx.textAlign='center';ctx.font='900 42px Orbitron,Arial';ctx.fillStyle=this.kind==='BOSS'?'#ff3158':'#ffad42';ctx.shadowBlur=22;ctx.shadowColor=ctx.fillStyle;ctx.fillText(this.kind==='BOSS'?'BOSS BATTLE':'MINI-BOSS',Game.width/2,270);ctx.shadowBlur=0;
