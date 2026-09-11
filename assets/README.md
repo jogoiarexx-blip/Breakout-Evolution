@@ -1,4 +1,4 @@
-# Assets — Breakout Evolution v0.4.3
+# Assets — Breakout Evolution v0.4.6
 
 - `images/backgrounds/`: 5 temas de fase + fundo do menu em WebP.
 - `images/paddle/`: sprite do paddle.
