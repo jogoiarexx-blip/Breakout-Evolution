@@ -1,0 +1,4 @@
+const canvas=document.getElementById('gameCanvas');canvas.width=CONFIG.SCREEN.WIDTH;canvas.height=CONFIG.SCREEN.HEIGHT;
+window.Game={ctx:canvas.getContext('2d'),canvas,width:CONFIG.SCREEN.WIDTH,height:CONFIG.SCREEN.HEIGHT,state:'MENU',initialized:false,data:{score:0,coins:0,level:1,lives:3,maxLives:3,highScore:0,selectedSkin:'default'},economy:null,particles:null,brickManager:null,paddle:null,ball:null,ui:null,hud:null,skinManager:null,settings:null,assets:null,levelLoader:null,worlds:null,progression:null,bossSystem:null};
+Game.settings=new SettingsManager();Game.assets=new AssetManager();Game.levelLoader=new LevelLoader();Game.worlds=new WorldManager();Game.progression=new ProgressionManager();
+canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.tabIndex=1;canvas.focus();document.addEventListener('gesturestart',e=>e.preventDefault());
