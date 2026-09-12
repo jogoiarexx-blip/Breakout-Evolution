@@ -928,7 +928,8 @@ class BrickManager {
         if (ball.fireball) {
             for (let brick of potentialBricks) {
                 if (ball.checkCollisionRect(brick)) {
-                    brick.hit();
+                    const hits = 1 + Math.max(0, Math.floor(ball.skinDamage || 0));
+                    for (let i = 0; i < hits && !brick.destroyed; i++) brick.hit();
                     // NÃO quebra o loop - continua destruindo todos no caminho
                 }
             }
@@ -954,7 +955,8 @@ class BrickManager {
                     ball.y = dy > 0 ? brick.y + brick.height + ball.radius : brick.y - ball.radius;
                 }
                 
-                brick.hit();
+                const hits = 1 + Math.max(0, Math.floor(ball.skinDamage || 0));
+                for (let i = 0; i < hits && !brick.destroyed; i++) brick.hit();
                 break;
             }
         }

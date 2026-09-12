@@ -1,4 +1,4 @@
-// meta-progression.js - árvore permanente de estrelas + modificadores de corrida v0.5.0
+// meta-progression.js - árvore permanente de estrelas + modificadores de corrida v0.5.2
 class MetaProgressionSystem {
   constructor(){
     this.key='breakout_meta_v046';
@@ -12,8 +12,8 @@ class MetaProgressionSystem {
     ];
     this.load();
   }
-  load(){try{const s=JSON.parse(localStorage.getItem(this.key)||'{}');if(s&&s.levels)this.data={...this.data,...s,levels:{...this.data.levels,...s.levels}};}catch(e){}}
-  save(){try{localStorage.setItem(this.key,JSON.stringify(this.data));}catch(e){}}
+  load(){try{const s=JSON.parse(BreakoutStorage.getItem(this.key)||'{}');if(s&&s.levels)this.data={...this.data,...s,levels:{...this.data.levels,...s.levels}};}catch(e){}}
+  save(){try{BreakoutStorage.setItem(this.key,JSON.stringify(this.data));}catch(e){}}
   totalStars(){return Game.progression?.totalStars?.()||0;}
   available(){return Math.max(0,this.totalStars()-(this.data.spent||0));}
   node(id){return this.nodes.find(n=>n.id===id);}

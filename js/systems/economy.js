@@ -186,7 +186,7 @@ class Economy {
                 };
             }
             
-            localStorage.setItem('breakoutEconomy', JSON.stringify(saveData));
+            BreakoutStorage.setItem('breakoutEconomy', JSON.stringify(saveData));
             this.saveGlobalData();
             
             console.log('Economy saved');
@@ -203,7 +203,7 @@ class Economy {
                 return;
             }
             
-            localStorage.setItem(CONFIG.SYSTEM.STORAGE_KEY, JSON.stringify(Game.data));
+            BreakoutStorage.setItem(CONFIG.SYSTEM.STORAGE_KEY, JSON.stringify(Game.data));
         } catch (error) {
             console.error('Failed to save game data:', error);
         }
@@ -212,7 +212,7 @@ class Economy {
     load() {
         try {
             // Carrega upgrades
-            const economyData = localStorage.getItem('breakoutEconomy');
+            const economyData = BreakoutStorage.getItem('breakoutEconomy');
             if (economyData) {
                 const loaded = JSON.parse(economyData);
                 for (let key in loaded) {
@@ -224,7 +224,7 @@ class Economy {
             }
             
             // Carrega dados do jogo
-            const gameData = localStorage.getItem(CONFIG.SYSTEM.STORAGE_KEY);
+            const gameData = BreakoutStorage.getItem(CONFIG.SYSTEM.STORAGE_KEY);
             if (gameData) {
                 const loaded = JSON.parse(gameData);
                 

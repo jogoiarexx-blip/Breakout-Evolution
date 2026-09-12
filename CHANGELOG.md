@@ -1,4 +1,27 @@
-# v0.5.0 - Bricks refeitos, render limpo e campo visual corrigido
+# v0.5.2 - Auditoria de estabilidade e correções sistêmicas
+
+- Corrigido sistema de skins: Paddle e Ball agora possuem `applySkin()` funcional.
+- Bônus de largura/velocidade/dano das skins agora afetam o gameplay de verdade.
+- Corrigido upgrade permanente de Vida Extra, que não era reaplicado ao iniciar nova partida.
+- Compra de skins agora salva também o saldo de moedas imediatamente.
+- Adicionado armazenamento seguro com fallback em memória quando `localStorage` estiver indisponível/bloqueado.
+- Estatísticas, conquistas e placar agora toleram dados corrompidos sem impedir o boot do jogo.
+- Loading de fase agora captura falhas do callback/assets e retorna ao menu sem ficar preso em LOADING.
+- Tratamento global de erro deixou de abrir alertas bloqueantes durante gameplay.
+- Cache-busting atualizado para v0.5.2.
+- Testes automatizados de runtime cobrem menu, configurações, campanha, seleção, árvore, loja, conquistas, estatísticas, leaderboard, skins e gameplay.
+
+# v0.5.2 - Hotfix de inicialização e canvas
+
+- Corrigido caso em que o loading inicial terminava e o canvas ficava visualmente vazio.
+- Removido `contain: strict` do canvas, que podia colapsar o tamanho visual em alguns navegadores.
+- Tamanho CSS do canvas agora é explícito, responsivo e mantém proporção 4:3.
+- Boot reaplica renderer/qualidade/contexto e força estado MENU depois do preload.
+- Adicionado cache-busting nos JS/CSS para impedir mistura entre versões antigas e novas no GitHub/navegador.
+- Adicionado watchdog visível de erro de render para evitar tela preta silenciosa.
+- Mantidos os novos sprites de bricks da v0.5.0.
+
+# v0.5.2 - Bricks refeitos, render limpo e campo visual corrigido
 
 - Sprites dos bricks refeitos do zero em formato widescreen (150x40) pensando no tamanho real do gameplay.
 - Tipos refeitos: normal, strong, metal, diamond, lava, neon, void, coin, explosive, moving e mystery.
@@ -9,7 +32,7 @@
 - Mantidos controles de volume Geral/Música/Efeitos e perfis gráficos AUTO/LOW/MEDIUM/HIGH.
 - Revisão geral de leitura visual dos mundos para o jogador identificar melhor os tipos de bloco.
 
-# v0.5.0 - Áudio ajustável e sprites corrigidos
+# v0.5.2 - Áudio ajustável e sprites corrigidos
 
 - Volume geral, música e efeitos separados e persistentes.
 - Áudio on/off agora funciona como mute sem perder volumes.
@@ -18,7 +41,7 @@
 - Visual antigo fica apenas como fallback se um asset falhar.
 - Power-ups também usam desenho proporcional.
 
-# v0.5.0 - Visual & Audio Upgrade
+# v0.5.2 - Visual & Audio Upgrade
 - Aplicados sprites gerados para paddle, bolas, bricks, power-ups, hazards, bosses e VFX.
 - Bosses e mini-bosses agora usam artes exclusivas por mundo.
 - Portais, barreiras, gravidade e laser ganharam sprites dedicados.
@@ -27,7 +50,7 @@
 
 # Changelog
 
-## 0.5.0
+## 0.5.2
 - Nova tela CAMPANHA com cinco mundos e progresso visual.
 - Ranking global por estrelas: Recruta, Piloto, Veterano, Mestre e Lendário.
 - Conquistas de mundo: Conquistado, Mestre e Perfeito.
@@ -78,7 +101,7 @@
 - Velocidade recebe multiplicador progressivo por mundo sem remover a dificuldade selecionável.
 - Progressão salva em localStorage.
 
-## v0.5.0 - Renderização adaptativa e aceleração
+## v0.5.2 - Renderização adaptativa e aceleração
 - Novo RenderManager com Canvas 2D de baixa latência (`desynchronized`) e superfície opaca.
 - Detecção de GPU/WebGL para diagnóstico e preferência de alto desempenho quando disponível.
 - Render scale real por qualidade: Baixo 72%, Médio 90%, Alto 100% (GPU Preferida pode usar 108% no Alto).

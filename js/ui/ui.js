@@ -110,11 +110,12 @@ class UI {
         const difficulty = Game.settings ? Game.settings.difficulty() : CONFIG.DIFFICULTY.NORMAL;
         let bossLifeBonus = 0;
         try {
-            const rewards = JSON.parse(localStorage.getItem('breakout_boss_rewards_v043') || '{}');
+            const rewards = JSON.parse(BreakoutStorage.getItem('breakout_boss_rewards_v043') || '{}');
             bossLifeBonus = Object.keys(rewards).filter(k => rewards[k] && Number(k.split('_')[1]) % 10 === 0).length;
         } catch (e) {}
         const metaLives=Game.meta?Game.meta.effects().extraLives:0;
-        Game.data.maxLives = Math.min(10, difficulty.lives + bossLifeBonus + metaLives);
+        const economyLives=Game.economy?Game.economy.getEffect('extraLife'):0;
+        Game.data.maxLives = Math.min(10, difficulty.lives + bossLifeBonus + metaLives + economyLives);
         Game.data.lives = Game.data.maxLives;
         
         // ✅ STATS: Registra início de jogo
@@ -359,7 +360,7 @@ class UI {
             '• Combo System\n' +
             '• Particle Effects\n' +
             '• Progressive Difficulty\n\n' +
-            'Breakout Evolution v0.5.0'
+            'Breakout Evolution v0.5.2'
         );
     }
 
@@ -403,7 +404,7 @@ class UI {
         ctx.textAlign='center';ctx.font='900 58px Orbitron, Arial';ctx.fillStyle='#dff8ff';
         if(!Game.settings || Game.settings.shadows()){ctx.shadowBlur=24;ctx.shadowColor='#00d2ff';}
         ctx.fillText('BREAKOUT',Game.width/2,98);ctx.shadowBlur=0;
-        ctx.font='700 18px Orbitron, Arial';ctx.fillStyle='#00d2ff';ctx.fillText('EVOLUTION',Game.width/2,130);ctx.font='600 11px Orbitron, Arial';ctx.fillStyle='#ffd166';ctx.fillText('v0.5.0',Game.width/2,149);
+        ctx.font='700 18px Orbitron, Arial';ctx.fillStyle='#00d2ff';ctx.fillText('EVOLUTION',Game.width/2,130);ctx.font='600 11px Orbitron, Arial';ctx.fillStyle='#ffd166';ctx.fillText('v0.5.2',Game.width/2,149);
         ctx.font='14px Rajdhani, Arial';ctx.fillStyle='#7f9aaa';ctx.fillText('ARCADE • UPGRADES • POWER-UPS',Game.width/2,172);
         const options=['▶ CAMPANHA','◆ LOJA','✦ MELHORIAS','★ CONQUISTAS','▣ PLACAR','⌁ ESTATÍSTICAS','⚙ CONFIGURAÇÕES','⌨ CONTROLES','ⓘ CRÉDITOS'];
         const cols=3,startX=48,startY=220,w=226,h=48,gapX=13,gapY=14;

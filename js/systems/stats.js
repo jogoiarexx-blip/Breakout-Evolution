@@ -76,8 +76,14 @@ class Statistics {
     }
     
     load() {
-        const saved = localStorage.getItem('breakout_stats');
-        return saved ? JSON.parse(saved) : null;
+        try {
+            const saved = BreakoutStorage.getItem('breakout_stats');
+            const parsed = saved ? JSON.parse(saved) : null;
+            return parsed && typeof parsed === 'object' ? { ...this.getDefaultStats(), ...parsed } : null;
+        } catch (e) {
+            console.warn('[Breakout] Estatísticas inválidas; usando padrão.', e);
+            return null;
+        }
     }
     
     save() {
@@ -86,7 +92,7 @@ class Statistics {
         this.stats.totalPlaytime += sessionTime;
         this.sessionStart = Date.now();
         
-        localStorage.setItem('breakout_stats', JSON.stringify(this.stats));
+        try { BreakoutStorage.setItem('breakout_stats', JSON.stringify(this.stats)); } catch (e) { console.warn('[Breakout] Falha ao salvar estatísticas:', e); }
     }
     
     reset() {

@@ -11,6 +11,8 @@ class Paddle {
         this.y = Game.height - CONFIG.PADDLE.OFFSET_BOTTOM;
         
         this.speed = 0;
+        this.skinId = Game.skinManager?.currentPaddleSkin || 'default';
+        this.skinData = Game.skinManager?.getPaddleSkinData(this.skinId) || CONFIG.SKINS.PADDLE.default;
         this.moveLeft = false;
         this.moveRight = false;
         
@@ -44,7 +46,9 @@ class Paddle {
         const bonus = Game.economy ? Game.economy.getEffect('paddleWidth') : 0;
         const meta = Game.meta ? Game.meta.effects() : {paddleWidth:0};
         const run = Game.runModifiers ? Game.runModifiers.effects() : {paddleWidth:0};
-        this.width = this.baseWidth + bonus + (meta.paddleWidth||0) + (run.paddleWidth||0);
+        const skinBonus = this.skinData?.bonus || {width:0,speed:0};
+        this.width = this.baseWidth + bonus + (meta.paddleWidth||0) + (run.paddleWidth||0) + (skinBonus.width||0);
+        this.skinSpeedBonus = Number(skinBonus.speed||0);
         
         // ✅ FIX: Ajusta posição para manter centralizado
         if (oldWidth) {
@@ -178,6 +182,25 @@ class Paddle {
         }
     }
 
+    applySkin(skinId='default') {
+        const data = Game.skinManager?.getPaddleSkinData(skinId) || CONFIG.SKINS.PADDLE[skinId] || CONFIG.SKINS.PADDLE.default;
+        if (!data) return false;
+        this.skinId = skinId;
+        this.skinData = data;
+        this.hue = data.color ? this.colorToHue(data.color) : 190;
+        this.applyUpgrades();
+        return true;
+    }
+
+    colorToHue(hex) {
+        const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+        if (!m) return 190;
+        let r=parseInt(m[1],16)/255,g=parseInt(m[2],16)/255,b=parseInt(m[3],16)/255;
+        const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min; let h=0;
+        if(d){ if(max===r) h=((g-b)/d)%6; else if(max===g) h=(b-r)/d+2; else h=(r-g)/d+4; h*=60; if(h<0) h+=360; }
+        return h;
+    }
+
     reset() {
         this.x = Game.width / 2 - this.width / 2;
         this.speed = 0;
@@ -206,8 +229,8 @@ class Paddle {
         this.speed *= CONFIG.PADDLE.FRICTION;
 
         // Clamp speed
-        this.speed = Math.max(-CONFIG.PADDLE.MAX_SPEED, 
-                             Math.min(CONFIG.PADDLE.MAX_SPEED, this.speed));
+        this.speed = Math.max(-(CONFIG.PADDLE.MAX_SPEED + this.skinSpeedBonus), 
+                             Math.min(CONFIG.PADDLE.MAX_SPEED + this.skinSpeedBonus, this.speed));
 
         // Update position
         this.x += this.speed;
@@ -220,7 +243,7 @@ class Paddle {
         this.pulsePhase += 0.05;
         
         // Glow intensity baseado na velocidade
-        const speedPercent = Math.abs(this.speed) / CONFIG.PADDLE.MAX_SPEED;
+        const speedPercent = Math.abs(this.speed) / Math.max(1, CONFIG.PADDLE.MAX_SPEED + this.skinSpeedBonus);
         this.glowIntensity = speedPercent * 0.5 + 0.3;
         
         // Hue shift suave
@@ -293,7 +316,7 @@ class Paddle {
 
         if(sprite){
             ctx.save();
-            if(Game.settings?.shadows()){ctx.shadowBlur=16;ctx.shadowColor=this.hasShield?'#67dfff':'#00d2ff';}
+            if(Game.settings?.shadows()){ctx.shadowBlur=16;ctx.shadowColor=this.hasShield?'#67dfff':(this.skinData?.color||'#00d2ff');}
             const visualW=this.width+22;
             const visualH=this.hasShield?64:48;
             Game.assets.drawContain(ctx,sprite,this.x+this.width/2,this.y+this.height/2,visualW,visualH,.98);

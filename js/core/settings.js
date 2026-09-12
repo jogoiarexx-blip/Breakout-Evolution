@@ -6,9 +6,9 @@ class SettingsManager {
     this.effectiveGraphics='MEDIUM'; this.fpsSamples=[]; this.lastAutoAdjust=0;
     this.load(); this.sanitize(); this.apply(true);
   }
-  load(){try{const saved=JSON.parse(localStorage.getItem(this.key)||'{}');this.data={...this.data,...saved};}catch(e){}}
+  load(){try{const saved=JSON.parse(BreakoutStorage.getItem(this.key)||'{}');this.data={...this.data,...saved};}catch(e){}}
   sanitize(){for(const k of ['masterVolume','musicVolume','sfxVolume'])this.data[k]=Math.max(0,Math.min(100,Number(this.data[k]??80)));}
-  save(){localStorage.setItem(this.key,JSON.stringify(this.data));}
+  save(){try{BreakoutStorage.setItem(this.key,JSON.stringify(this.data));}catch(e){console.warn('[Breakout] Não foi possível salvar configurações:',e);}}
   cycle(key,dir=1){const arr=this.options[key];if(!arr)return;const i=Math.max(0,arr.indexOf(this.data[key]));this.data[key]=arr[(i+dir+arr.length)%arr.length];this.save();this.apply();}
   adjustVolume(key,dir=1){if(!['masterVolume','musicVolume','sfxVolume'].includes(key))return;this.data[key]=Math.max(0,Math.min(100,(Number(this.data[key])||0)+dir*10));this.save();this.apply(true);}
   toggleAudio(){this.data.audio=!this.data.audio;this.save();this.apply(true);}

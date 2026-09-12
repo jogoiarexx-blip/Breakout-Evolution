@@ -64,6 +64,10 @@ function initializeGame() {
         
         Game.ball = new Ball();
         console.log('✅ Ball carregado');
+        if (Game.skinManager) {
+            Game.paddle.applySkin(Game.skinManager.currentPaddleSkin || 'default');
+            Game.ball.applySkin(Game.skinManager.currentBallSkin || 'default');
+        }
         
         Game.ui = new UI();
         console.log('✅ UI carregado');
@@ -200,6 +204,15 @@ function gameLoop(currentTime) {
         renderCurrentState();
     } catch (error) {
         console.error('❌ Erro no render:', error);
+        try{
+            const ctx=Game.ctx;
+            Game.renderer?.beginFrame();
+            ctx.fillStyle='#07101b';ctx.fillRect(0,0,Game.width,Game.height);
+            ctx.textAlign='center';ctx.fillStyle='#ff6b6b';ctx.font='700 20px Arial';ctx.fillText('ERRO DE RENDERIZAÇÃO',Game.width/2,Game.height/2-20);
+            ctx.fillStyle='#cbd5df';ctx.font='14px Arial';ctx.fillText(String(error?.message||error).slice(0,90),Game.width/2,Game.height/2+10);
+            ctx.fillText('Recarregue a página. O jogo tentou recuperar o menu.',Game.width/2,Game.height/2+36);
+        }catch(_){ }
+        Game.state='MENU';
     }
     
     // Debug info
@@ -540,7 +553,7 @@ window.addEventListener('error', (e) => {
     // Tenta recuperar para o menu
     if (Game.state !== 'MENU') {
         Game.state = 'MENU';
-        alert('Ocorreu um erro. Retornando ao menu principal.');
+        if (Game.hud) Game.hud.addNotification('ERRO RECUPERADO — MENU RESTAURADO', '#ff6b6b', 3);
     }
 });
 
@@ -573,7 +586,7 @@ if (initializeGame()) {
     // Mensagem de boas-vindas
     setTimeout(() => {
         if (Game.state === 'MENU') {
-            console.log('%c🎮 BREAKOUT EVOLUTION v0.5.0', 'color: #00d2ff; font-size: 20px; font-weight: bold');
+            console.log('%c🎮 BREAKOUT EVOLUTION v0.5.2', 'color: #00d2ff; font-size: 20px; font-weight: bold');
             console.log('%cControles:', 'color: #FFD700; font-weight: bold');
             console.log('  Movimento: ← → ou A D ou Mouse');
             console.log('  Lançar: SPACE');

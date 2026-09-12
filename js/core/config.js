@@ -1,3 +1,25 @@
+// Storage seguro: usa localStorage quando disponível e fallback em memória quando bloqueado.
+const BreakoutStorage = (() => {
+    const memory = new Map();
+    function nativeStorage() {
+        try {
+            const s = window.localStorage;
+            const test = '__breakout_storage_test__';
+            s.setItem(test, '1');
+            s.removeItem(test);
+            return s;
+        } catch (_) { return null; }
+    }
+    const native = nativeStorage();
+    return {
+        persistent: !!native,
+        getItem(key) { try { return native ? native.getItem(key) : (memory.has(key) ? memory.get(key) : null); } catch (_) { return memory.has(key) ? memory.get(key) : null; } },
+        setItem(key, value) { const v=String(value); try { if (native) native.setItem(key, v); else memory.set(key, v); } catch (_) { memory.set(key, v); } },
+        removeItem(key) { try { if (native) native.removeItem(key); } catch (_) {} memory.delete(key); },
+        clear() { try { if (native) native.clear(); } catch (_) {} memory.clear(); }
+    };
+})();
+
 // config_enhanced.js - Configurações Premium com Gráficos Avançados
 const CONFIG = {
     SCREEN: {

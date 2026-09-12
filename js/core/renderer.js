@@ -17,6 +17,7 @@ class RenderManager {
     });
 
     canvas.style.aspectRatio = `${logicalWidth} / ${logicalHeight}`;
+    canvas.style.display = 'block';
     canvas.dataset.acceleration = this.gpuInfo.supported ? 'gpu-available' : 'compatibility';
     this.applyQuality('MEDIUM');
   }
@@ -72,6 +73,9 @@ class RenderManager {
   }
 
   configureContext() {
+    // Defesa contra canvas colapsado ou resolução inválida após mudança de perfil.
+    if(!Number.isFinite(this.canvas.width) || this.canvas.width < 320) this.canvas.width=Math.max(320,Math.round(this.logicalWidth*this.renderScale));
+    if(!Number.isFinite(this.canvas.height) || this.canvas.height < 240) this.canvas.height=Math.max(240,Math.round(this.logicalHeight*this.renderScale));
     const s = this.renderScale;
     // Toda a engine continua trabalhando em 800x600 lógicos.
     this.ctx.setTransform(s, 0, 0, s, 0, 0);

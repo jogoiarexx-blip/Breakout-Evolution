@@ -92,8 +92,8 @@ class BossSystem {
   }
   onDefeated(){
     if(!this.active||this.rewardGiven)return;this.rewardGiven=true;
-    const id=`boss_${this.level}`;let rewards={};try{rewards=JSON.parse(localStorage.getItem('breakout_boss_rewards_v043')||'{}');}catch(e){}
-    if(!rewards[id]){rewards[id]=true;try{localStorage.setItem('breakout_boss_rewards_v043',JSON.stringify(rewards));}catch(e){}
+    const id=`boss_${this.level}`;let rewards={};try{rewards=JSON.parse(BreakoutStorage.getItem('breakout_boss_rewards_v043')||'{}');}catch(e){}
+    if(!rewards[id]){rewards[id]=true;try{BreakoutStorage.setItem('breakout_boss_rewards_v043',JSON.stringify(rewards));}catch(e){}
       const coins=this.kind==='BOSS'?250+this.level*8:100+this.level*4;Game.economy?.addCoins(coins);Game.data.maxLives=Math.min(8,(Game.data.maxLives||3)+(this.kind==='BOSS'?1:0));Game.data.lives=Math.max(Game.data.lives,Game.data.maxLives);
       if(Game.hud)Game.hud.addNotification(this.kind==='BOSS'?`RECOMPENSA: +1 VIDA MÁX • +${coins} MOEDAS`:`RECOMPENSA: +${coins} MOEDAS`,'#ffd166',2.4);
     }

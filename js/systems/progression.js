@@ -1,7 +1,7 @@
 class ProgressionManager {
   constructor(){this.key='breakout_progress_v046';this.legacyKey='breakout_progress_v045';this.data={unlocked:1,bestLevel:1,completed:[],stars:{},worldRewards:[]};this.load();}
-  load(){try{const raw=localStorage.getItem(this.key)||localStorage.getItem(this.legacyKey)||'{}';const s=JSON.parse(raw);this.data={...this.data,...s,stars:s.stars||{},worldRewards:s.worldRewards||[]};}catch(e){}}
-  save(){try{localStorage.setItem(this.key,JSON.stringify(this.data));}catch(e){}}
+  load(){try{const raw=BreakoutStorage.getItem(this.key)||BreakoutStorage.getItem(this.legacyKey)||'{}';const s=JSON.parse(raw);this.data={...this.data,...s,stars:s.stars||{},worldRewards:s.worldRewards||[]};}catch(e){}}
+  save(){try{BreakoutStorage.setItem(this.key,JSON.stringify(this.data));}catch(e){}}
   isUnlocked(level){return level<=this.data.unlocked;}
   complete(level,result={}){
     if(!this.data.completed.includes(level)) this.data.completed.push(level);

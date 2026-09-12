@@ -2,9 +2,22 @@
 class Ball {
     constructor() {
         this.radius = CONFIG.BALL.RADIUS;
+        this.skinId = Game.skinManager?.currentBallSkin || 'default';
+        this.skinData = Game.skinManager?.getBallSkinData(this.skinId) || CONFIG.SKINS.BALL.default;
+        this.skinDamage = Number(this.skinData?.bonus?.damage || 0);
         this.active = false;
         this.lastHitBrick = null; // Evita múltiplas colisões no mesmo frame
         this.reset();
+    }
+
+    applySkin(skinId='default') {
+        const data = Game.skinManager?.getBallSkinData(skinId) || CONFIG.SKINS.BALL[skinId] || CONFIG.SKINS.BALL.default;
+        if (!data) return false;
+        this.skinId = skinId;
+        this.skinData = data;
+        this.skinDamage = Number(data.bonus?.damage || 0);
+        if (!this.active) this.reset();
+        return true;
     }
 
     reset() {
@@ -19,7 +32,8 @@ class Ball {
         const worldMultiplier = Game.worlds ? Game.worlds.difficultyMultiplier(Game.data?.level || 1) : 1;
         const metaMult=Game.meta?Game.meta.effects().ballSpeedMultiplier:1;
         const runMult=Game.runModifiers?Game.runModifiers.effects().ballSpeed:1;
-        const baseSpeed = (CONFIG.BALL.SPEED + speedBonus) * difficulty.ballSpeed * worldMultiplier * metaMult * runMult;
+        const skinSpeed = Number(this.skinData?.bonus?.speed || 0);
+        const baseSpeed = (CONFIG.BALL.SPEED + speedBonus + skinSpeed) * difficulty.ballSpeed * worldMultiplier * metaMult * runMult;
         
         // Ângulo aleatório inicial (evita sempre mesmo padrão)
         const angle = (Math.random() * Math.PI / 3) - Math.PI / 6; // ±30 graus
@@ -311,7 +325,7 @@ class Ball {
         // Bola vetorial é apenas fallback quando o sprite não carregar.
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.fireball ? '#FF4500' : CONFIG.BALL.COLOR;
+        ctx.fillStyle = this.fireball ? '#FF4500' : (this.skinData?.color || CONFIG.BALL.COLOR);
         ctx.fill();
         
         // Gradiente interno (efeito 3D)

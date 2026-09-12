@@ -42,8 +42,9 @@ class SkinManager {
         // Equipa automaticamente
         this.equipPaddleSkin(skinId);
         
-        // Salva
+        // Salva skin e saldo imediatamente
         this.save();
+        if (Game.economy && typeof Game.economy.saveGlobalData === 'function') Game.economy.saveGlobalData();
         
         // ✅ SOM: Compra
         if (Game.audio) Game.audio.play('upgrade');
@@ -79,8 +80,9 @@ class SkinManager {
         // Equipa automaticamente
         this.equipBallSkin(skinId);
         
-        // Salva
+        // Salva skin e saldo imediatamente
         this.save();
+        if (Game.economy && typeof Game.economy.saveGlobalData === 'function') Game.economy.saveGlobalData();
         
         // ✅ SOM: Compra
         if (Game.audio) Game.audio.play('upgrade');
@@ -102,7 +104,7 @@ class SkinManager {
         this.currentPaddleSkin = skinId;
         
         // Atualiza paddle se existir
-        if (Game.paddle) {
+        if (Game.paddle && typeof Game.paddle.applySkin === 'function') {
             Game.paddle.applySkin(skinId);
         }
         
@@ -119,7 +121,7 @@ class SkinManager {
         this.currentBallSkin = skinId;
         
         // Atualiza ball se existir
-        if (Game.ball) {
+        if (Game.ball && typeof Game.ball.applySkin === 'function') {
             Game.ball.applySkin(skinId);
         }
         
@@ -187,12 +189,12 @@ class SkinManager {
             ownedBallSkins: this.ownedBallSkins
         };
         
-        localStorage.setItem(CONFIG.SYSTEM.STORAGE_KEY + '_skins', JSON.stringify(data));
+        BreakoutStorage.setItem(CONFIG.SYSTEM.STORAGE_KEY + '_skins', JSON.stringify(data));
     }
     
     load() {
         try {
-            const saved = localStorage.getItem(CONFIG.SYSTEM.STORAGE_KEY + '_skins');
+            const saved = BreakoutStorage.getItem(CONFIG.SYSTEM.STORAGE_KEY + '_skins');
             if (saved) {
                 const data = JSON.parse(saved);
                 this.currentPaddleSkin = data.currentPaddleSkin || 'default';

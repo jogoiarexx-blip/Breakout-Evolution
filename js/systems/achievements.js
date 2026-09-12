@@ -156,12 +156,15 @@ class AchievementSystem {
     }
     
     load() {
-        const saved = localStorage.getItem('breakout_achievements');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = BreakoutStorage.getItem('breakout_achievements');
+            const parsed = saved ? JSON.parse(saved) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) { return []; }
     }
     
     save() {
-        localStorage.setItem('breakout_achievements', JSON.stringify(this.unlocked));
+        try { BreakoutStorage.setItem('breakout_achievements', JSON.stringify(this.unlocked)); } catch (e) {}
     }
     
     check() {

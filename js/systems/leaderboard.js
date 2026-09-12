@@ -8,12 +8,15 @@ class Leaderboard {
     }
     
     load() {
-        const saved = localStorage.getItem('breakout_leaderboard');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = BreakoutStorage.getItem('breakout_leaderboard');
+            const parsed = saved ? JSON.parse(saved) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) { return []; }
     }
     
     save() {
-        localStorage.setItem('breakout_leaderboard', JSON.stringify(this.scores));
+        try { BreakoutStorage.setItem('breakout_leaderboard', JSON.stringify(this.scores)); } catch (e) {}
     }
     
     addScore(playerName, score, level, coins) {
