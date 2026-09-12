@@ -87,7 +87,7 @@ class Paddle {
             if (Game.state !== 'PLAYING') return;
             
             const rect = Game.canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
+            const mouseX = (e.clientX - rect.left) * (Game.width / rect.width);
             
             // Move paddle suavemente em direção ao mouse
             const targetX = mouseX - this.width / 2;
@@ -112,7 +112,7 @@ class Paddle {
         
         const getTouchPos = (touch) => {
             const rect = Game.canvas.getBoundingClientRect();
-            const scaleX = Game.canvas.width / rect.width;
+            const scaleX = Game.width / rect.width;
             const touchX = (touch.clientX - rect.left) * scaleX;
             return touchX;
         };
@@ -286,43 +286,31 @@ class Paddle {
         const ctx = Game.ctx;
         const spriteKey = this.hasShield ? 'paddleShield' : (Game.weapons?.enabled ? 'paddleLaser' : (this.width > this.baseWidth*1.25 ? 'paddleWide' : 'paddle'));
         const sprite=Game.assets?.image(spriteKey) || Game.assets?.image('paddle');
-        if(sprite && Game.settings?.effectiveGraphics==='LOW'){
-            ctx.drawImage(sprite,this.x-5,this.y-11,this.width+10,this.height+22);
+
+        // Efeitos leves ficam atrás do sprite; o corpo legado só é usado como fallback.
+        this.drawTrailParticles(ctx);
+        if(Game.settings?.shadows()) this.drawShadow(ctx);
+
+        if(sprite){
+            ctx.save();
+            if(Game.settings?.shadows()){ctx.shadowBlur=16;ctx.shadowColor=this.hasShield?'#67dfff':'#00d2ff';}
+            const visualW=this.width+22;
+            const visualH=this.hasShield?64:48;
+            Game.assets.drawContain(ctx,sprite,this.x+this.width/2,this.y+this.height/2,visualW,visualH,.98);
+            ctx.restore();
+            if (this.hitGlowIntensity > 0) this.drawHitEffect(ctx);
+            ctx.shadowBlur=0;
             return;
         }
-        
-        // 🎨 DESENHA PARTÍCULAS DE RASTRO PRIMEIRO
-        this.drawTrailParticles(ctx);
-        
-        // 🎨 REFLEXO/SOMBRA PROJETADA
-        this.drawShadow(ctx);
-        
-        // 🎨 BRILHO EXTERNO (GLOW)
+
+        // Fallback vetorial antigo, somente quando o asset não estiver disponível.
         this.drawOuterGlow(ctx);
-        
-        // ✅ FIX BUG #5: Visual do Shield
-        if (this.hasShield) {
-            this.drawShield(ctx);
-        }
-        
-        // 🎨 CORPO PRINCIPAL COM GRADIENTE 3D
+        if (this.hasShield) this.drawShield(ctx);
         this.drawMainBody(ctx);
-        
-        if(sprite){ctx.globalAlpha=.96;ctx.drawImage(sprite,this.x-7,this.y-12,this.width+14,this.height+24);ctx.globalAlpha=1;}
-        // 🎨 DETALHES METÁLICOS
         this.drawMetallicDetails(ctx);
-        
-        // 🎨 BORDA COM EFEITO NEON
         this.drawNeonBorder(ctx);
-        
-        // 🎨 INDICADOR DE ENERGIA
         this.drawEnergyIndicator(ctx);
-        
-        // 🎨 HIT EFFECT
-        if (this.hitGlowIntensity > 0) {
-            this.drawHitEffect(ctx);
-        }
-        
+        if (this.hitGlowIntensity > 0) this.drawHitEffect(ctx);
         ctx.shadowBlur = 0;
     }
     

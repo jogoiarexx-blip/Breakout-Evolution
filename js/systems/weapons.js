@@ -6,6 +6,6 @@ class WeaponSystem {
   update(dt){this.cooldown=Math.max(0,this.cooldown-dt);if(this.enabled&&performance.now()>this.endAt)this.enabled=false;
     for(let i=this.lasers.length-1;i>=0;i--){const l=this.lasers[i];l.y-=520*dt;let hit=false;for(const b of Game.brickManager?.bricks||[]){if(b.destroyed)continue;if(l.x+l.w>b.x&&l.x<b.x+b.width&&l.y<b.y+b.height&&l.y+l.h>b.y){b.hit();hit=true;break;}}if(hit||l.y<-20)this.lasers.splice(i,1);}
   }
-  draw(){const ctx=Game.ctx;ctx.save();const fx=Game.assets?.image('vfxLaser');for(const l of this.lasers){if(fx)ctx.drawImage(fx,l.x-11,l.y-8,26,34);else{ctx.fillStyle='#ff4fd8';if(Game.settings?.effectiveGraphics!=='LOW'){ctx.shadowBlur=12;ctx.shadowColor='#ff4fd8';}ctx.fillRect(l.x,l.y,l.w,l.h);}}ctx.restore();}
+  draw(){const ctx=Game.ctx;ctx.save();const fx=Game.assets?.image('vfxLaser');for(const l of this.lasers){if(fx){ctx.save();ctx.translate(l.x+l.w/2,l.y+l.h/2);ctx.rotate(-Math.PI/2);Game.assets.drawContain(ctx,fx,0,0,34,22,.98);ctx.restore();}else{ctx.fillStyle='#ff4fd8';if(Game.settings?.effectiveGraphics!=='LOW'){ctx.shadowBlur=12;ctx.shadowColor='#ff4fd8';}ctx.fillRect(l.x,l.y,l.w,l.h);}}ctx.restore();}
   clear(){this.lasers=[];this.enabled=false;this.cooldown=0;}
 }

@@ -34,6 +34,18 @@ class AssetManager {
     let done=0; for(const [k,u] of jobs){await this.loadImage(k,u);progress(++done/jobs.length);}
     if(Game.audio) await Game.audio.setLevelMusic(theme, manifest.music);
   }
+  drawContain(ctx,img,cx,cy,maxW,maxH,alpha=1){
+    if(!img||!img.naturalWidth||!img.naturalHeight)return false;
+    const scale=Math.min(maxW/img.naturalWidth,maxH/img.naturalHeight);
+    const w=img.naturalWidth*scale,h=img.naturalHeight*scale;
+    const old=ctx.globalAlpha;ctx.globalAlpha=old*alpha;ctx.drawImage(img,cx-w/2,cy-h/2,w,h);ctx.globalAlpha=old;return true;
+  }
+  drawCover(ctx,img,x,y,w,h,alpha=1){
+    if(!img||!img.naturalWidth||!img.naturalHeight)return false;
+    const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight);
+    const sw=w/scale,sh=h/scale,sx=(img.naturalWidth-sw)/2,sy=(img.naturalHeight-sh)/2;
+    const old=ctx.globalAlpha;ctx.globalAlpha=old*alpha;ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);ctx.globalAlpha=old;return true;
+  }
   image(key){return this.images.get(key)||null;}
   backgroundForLevel(level=this.currentLevel){return this.image(`bg-${Math.floor(((level-1)%25)/5)+1}`);}
 }

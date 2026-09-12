@@ -1,16 +1,42 @@
 class AudioManager {
   constructor(){
-    try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();this.volume=CONFIG.AUDIO?.VOLUME||.3;this.musicVolume=CONFIG.AUDIO?.MUSIC_VOLUME||.18;this.enabled=CONFIG.AUDIO?.ENABLED??true;this.buffers=new Map();this.musicSource=null;this.currentMusic=0;this.generateFallbacks();this.resumeOnGesture=()=>{if(this.ctx?.state==='suspended')this.ctx.resume();};['click','keydown','touchstart'].forEach(e=>window.addEventListener(e,this.resumeOnGesture));this.preloadSfx();}catch(e){this.enabled=false;}
+    try{
+      this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+      this.enabled=CONFIG.AUDIO?.ENABLED??true;
+      this.volume=CONFIG.AUDIO?.VOLUME||.3;
+      this.musicVolume=CONFIG.AUDIO?.MUSIC_VOLUME||.18;
+      this.masterLevel=1; this.musicLevel=.7; this.sfxLevel=.85;
+      this.buffers=new Map(); this.musicSource=null; this.currentMusic=0;
+      this.masterGain=this.ctx.createGain(); this.musicBus=this.ctx.createGain(); this.sfxBus=this.ctx.createGain();
+      this.musicBus.connect(this.masterGain); this.sfxBus.connect(this.masterGain); this.masterGain.connect(this.ctx.destination);
+      this.generateFallbacks(); this.applyMix();
+      this.resumeOnGesture=()=>{if(this.ctx?.state==='suspended')this.ctx.resume();};
+      ['click','keydown','touchstart'].forEach(e=>window.addEventListener(e,this.resumeOnGesture));
+      this.preloadSfx();
+    }catch(e){this.enabled=false;}
+  }
+  applyMix(){
+    if(!this.ctx||!this.masterGain)return;
+    this.masterGain.gain.value=this.enabled?this.masterLevel:0;
+    this.musicBus.gain.value=this.musicLevel;
+    this.sfxBus.gain.value=this.sfxLevel;
+  }
+  setEnabled(v){this.enabled=!!v;this.applyMix();return this.enabled;}
+  setMix(master=1,music=.7,sfx=.85){
+    this.masterLevel=Math.max(0,Math.min(1,master));
+    this.musicLevel=Math.max(0,Math.min(1,music));
+    this.sfxLevel=Math.max(0,Math.min(1,sfx));
+    this.applyMix();
   }
   generateFallbacks(){this.sounds={paddleHit:()=>this.playTone(440,.05,'sine',.22),brickBreak:()=>this.playTone(880,.08,'square',.16),wallBounce:()=>this.playTone(220,.05,'triangle',.18),coin:()=>this.playMelody([{freq:523,dur:.05},{freq:659,dur:.05},{freq:784,dur:.1}],.14),lifeLost:()=>this.playMelody([{freq:440,dur:.12},{freq:330,dur:.12},{freq:220,dur:.18}],.2),levelComplete:()=>this.playMelody([{freq:523,dur:.08},{freq:659,dur:.08},{freq:784,dur:.08},{freq:1047,dur:.2}],.18),powerup:()=>this.playMelody([{freq:659,dur:.05},{freq:784,dur:.05},{freq:1047,dur:.1}],.16),gameOver:()=>this.playMelody([{freq:523,dur:.2},{freq:494,dur:.2},{freq:440,dur:.2},{freq:392,dur:.35}],.2),upgrade:()=>this.playTone(1047,.12,'sine',.18),laser:()=>this.playTone(1450,.12,'sawtooth',.16),portal:()=>this.playTone(260,.35,'sine',.16),bossWarning:()=>this.playTone(110,.45,'sawtooth',.2),bossHit:()=>this.playTone(120,.12,'square',.2),explosion:()=>this.playTone(70,.4,'sawtooth',.22)};}
   async loadBuffer(key,url){if(this.buffers.has(key))return this.buffers.get(key);try{const r=await fetch(url);const arr=await r.arrayBuffer();const b=await this.ctx.decodeAudioData(arr);this.buffers.set(key,b);return b;}catch(e){return null;}}
   async preloadSfx(){const map={paddleHit:'paddle-hit.wav',brickBreak:'brick-break.wav',wallBounce:'wall-bounce.wav',powerup:'powerup.wav',levelComplete:'level-complete.wav',lifeLost:'life-lost.wav',laser:'laser.wav',portal:'portal.wav',bossWarning:'boss-warning.wav',bossHit:'boss-hit.wav',explosion:'explosion.wav',coin:'coin.wav'};for(const [k,f] of Object.entries(map))await this.loadBuffer(k,`assets/audio/sfx/${f}`);}
-  playBuffer(key,volume=this.volume){if(!this.enabled||!this.ctx)return false;const b=this.buffers.get(key);if(!b)return false;const s=this.ctx.createBufferSource(),g=this.ctx.createGain();s.buffer=b;s.connect(g);g.connect(this.ctx.destination);g.gain.value=volume;s.start();return true;}
-  playTone(f,d,type='sine',v=this.volume){if(!this.enabled||!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.frequency.value=f;o.type=type;g.gain.setValueAtTime(v,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+d);o.start();o.stop(this.ctx.currentTime+d);}
-  playMelody(notes,v=this.volume){if(!this.enabled||!this.ctx)return;let t=this.ctx.currentTime;notes.forEach(n=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.frequency.value=n.freq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.01,t+n.dur);o.start(t);o.stop(t+n.dur);t+=n.dur;});}
-  play(name){if(!this.playBuffer(name))this.sounds[name]?.();}
-  async setLevelMusic(theme,url){if(this.currentMusic===theme&&this.musicSource)return;const b=await this.loadBuffer(`music-${theme}`,url);this.stopMusic();this.currentMusic=theme;if(!this.enabled||!b)return;const s=this.ctx.createBufferSource(),g=this.ctx.createGain();s.buffer=b;s.loop=true;s.connect(g);g.connect(this.ctx.destination);g.gain.value=this.musicVolume;s.start();this.musicSource=s;}
-  stopMusic(){try{this.musicSource?.stop();}catch(e){}this.musicSource=null;}
+  playBuffer(key,volume=this.volume){if(!this.enabled||!this.ctx)return false;const b=this.buffers.get(key);if(!b)return false;const s=this.ctx.createBufferSource(),g=this.ctx.createGain();s.buffer=b;s.connect(g);g.connect(this.sfxBus);g.gain.value=volume;s.start();return true;}
+  playTone(f,d,type='sine',v=this.volume){if(!this.enabled||!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.sfxBus);o.frequency.value=f;o.type=type;g.gain.setValueAtTime(v,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+d);o.start();o.stop(this.ctx.currentTime+d);}
+  playMelody(notes,v=this.volume){if(!this.enabled||!this.ctx)return;let t=this.ctx.currentTime;notes.forEach(n=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.sfxBus);o.frequency.value=n.freq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.01,t+n.dur);o.start(t);o.stop(t+n.dur);t+=n.dur;});}
+  play(name){if(!this.enabled)return;if(!this.playBuffer(name))this.sounds[name]?.();}
+  async setLevelMusic(theme,url){if(this.currentMusic===theme&&this.musicSource)return;const b=await this.loadBuffer(`music-${theme}`,url);this.stopMusic();this.currentMusic=theme;if(!b||!this.ctx)return;const s=this.ctx.createBufferSource(),g=this.ctx.createGain();s.buffer=b;s.loop=true;s.connect(g);g.connect(this.musicBus);g.gain.value=this.musicVolume;s.start();this.musicSource=s;this.musicGainNode=g;}
+  stopMusic(){try{this.musicSource?.stop();}catch(e){}this.musicSource=null;this.musicGainNode=null;}
   setVolume(v){this.volume=Math.max(0,Math.min(1,v));}
-  toggle(){this.enabled=!this.enabled;if(!this.enabled)this.stopMusic();return this.enabled;}
+  toggle(){return this.setEnabled(!this.enabled);}
 }

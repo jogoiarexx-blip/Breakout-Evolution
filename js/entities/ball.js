@@ -304,12 +304,11 @@ class Ball {
         const overcharged=!!(Game.weapons?.enabled && this.fireball);
         const sprite=Game.assets?.image(overcharged?'overchargeBall':(this.fireball?'fireball':'ball'));
         if(sprite){
-            const size=this.radius*(overcharged?3.9:(this.fireball?3.7:3.35)); ctx.save();
+            const box=this.radius*(overcharged?4.4:(this.fireball?4.1:3.7));ctx.save();
             if(Game.settings?.shadows()){ctx.shadowBlur=this.fireball?24:14;ctx.shadowColor=this.fireball?'#ff5a00':'#00d2ff';}
-            ctx.drawImage(sprite,this.x-size/2,this.y-size/2,size,size);ctx.restore();
-            if(Game.settings?.effectiveGraphics==='LOW'){ctx.shadowBlur=0;return;}
+            Game.assets.drawContain(ctx,sprite,this.x,this.y,box,box,.98);ctx.restore();ctx.shadowBlur=0;return;
         }
-        // Bola principal/fallback vetorial
+        // Bola vetorial é apenas fallback quando o sprite não carregar.
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.fireball ? '#FF4500' : CONFIG.BALL.COLOR;

@@ -18,7 +18,7 @@ function initializeGame() {
         
         // ✅ NOVOS: Audio, PowerUps, Stats, Achievements, Leaderboard, LevelGen
         Game.audio = new AudioManager();
-        if (Game.settings) Game.audio.enabled = Game.settings.data.audio;
+        if (Game.settings) { Game.audio.setEnabled(Game.settings.data.audio); Game.audio.setMix(Game.settings.data.masterVolume/100,Game.settings.data.musicVolume/100,Game.settings.data.sfxVolume/100); }
         console.log('✅ Audio carregado');
         
         Game.stats = new Statistics();
@@ -341,9 +341,10 @@ function updateMenu(dt) {
 // FUNÇÕES DE RENDER
 // ============================================
 function clearScreen() {
+    if(Game.renderer)Game.renderer.beginFrame();
     const ctx=Game.ctx; ctx.clearRect(0,0,Game.width,Game.height);
     const img=(Game.state==='MENU'||Game.state==='CAMPAIGN'||Game.state==='LEVEL_SELECT'||Game.state==='UPGRADE_TREE'||Game.state==='PRE_LEVEL'||Game.state==='SETTINGS'||Game.state==='SHOP'||Game.state==='ACHIEVEMENTS'||Game.state==='LEADERBOARD'||Game.state==='STATISTICS') ? Game.assets?.image('menu') : Game.assets?.backgroundForLevel(Game.data.level);
-    if(img){ctx.drawImage(img,0,0,Game.width,Game.height);ctx.fillStyle='rgba(2,6,14,.34)';ctx.fillRect(0,0,Game.width,Game.height);}
+    if(img){Game.assets.drawCover(ctx,img,0,0,Game.width,Game.height,.98);ctx.fillStyle='rgba(2,6,14,.34)';ctx.fillRect(0,0,Game.width,Game.height);}
     else{const gradient=ctx.createLinearGradient(0,0,0,Game.height);gradient.addColorStop(0,'#0a0a0f');gradient.addColorStop(1,'#1a1a2e');ctx.fillStyle=gradient;ctx.fillRect(0,0,Game.width,Game.height);}
 }
 
@@ -572,7 +573,7 @@ if (initializeGame()) {
     // Mensagem de boas-vindas
     setTimeout(() => {
         if (Game.state === 'MENU') {
-            console.log('%c🎮 BREAKOUT EVOLUTION v0.4.7', 'color: #00d2ff; font-size: 20px; font-weight: bold');
+            console.log('%c🎮 BREAKOUT EVOLUTION v0.4.9', 'color: #00d2ff; font-size: 20px; font-weight: bold');
             console.log('%cControles:', 'color: #FFD700; font-weight: bold');
             console.log('  Movimento: ← → ou A D ou Mouse');
             console.log('  Lançar: SPACE');

@@ -248,7 +248,7 @@ class PowerUp {
         if(sprite){
             const pulse=Game.settings?.effectiveGraphics==='LOW'?1:1+Math.sin(this.glowPhase)*.08;
             ctx.save();ctx.translate(this.x+15,this.y+15);ctx.rotate(Game.settings?.effectiveGraphics==='LOW'?0:this.rotation*.35);ctx.scale(pulse,pulse);
-            if(Game.settings?.shadows()){ctx.shadowBlur=14;ctx.shadowColor=this.data.color;}ctx.drawImage(sprite,-18,-18,36,36);ctx.restore();return;
+            if(Game.settings?.shadows()){ctx.shadowBlur=14;ctx.shadowColor=this.data.color;}Game.assets.drawContain(ctx,sprite,0,0,38,38,.98);ctx.restore();return;
         }
         ctx.save();
         ctx.translate(this.x + 15, this.y + 15);

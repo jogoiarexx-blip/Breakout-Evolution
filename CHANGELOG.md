@@ -1,4 +1,13 @@
-# v0.4.7 - Visual & Audio Upgrade
+# v0.4.9 - Áudio ajustável e sprites corrigidos
+
+- Volume geral, música e efeitos separados e persistentes.
+- Áudio on/off agora funciona como mute sem perder volumes.
+- Sprites passam a preservar proporção original.
+- Removido desenho vetorial duplicado por baixo dos sprites novos em paddle, bola e blocos.
+- Visual antigo fica apenas como fallback se um asset falhar.
+- Power-ups também usam desenho proporcional.
+
+# v0.4.9 - Visual & Audio Upgrade
 - Aplicados sprites gerados para paddle, bolas, bricks, power-ups, hazards, bosses e VFX.
 - Bosses e mini-bosses agora usam artes exclusivas por mundo.
 - Portais, barreiras, gravidade e laser ganharam sprites dedicados.
@@ -7,7 +16,7 @@
 
 # Changelog
 
-## 0.4.7
+## 0.4.9
 - Nova tela CAMPANHA com cinco mundos e progresso visual.
 - Ranking global por estrelas: Recruta, Piloto, Veterano, Mestre e Lendário.
 - Conquistas de mundo: Conquistado, Mestre e Perfeito.
@@ -57,3 +66,14 @@
 - Atmosfera visual por mundo respeitando LOW/MEDIUM/HIGH.
 - Velocidade recebe multiplicador progressivo por mundo sem remover a dificuldade selecionável.
 - Progressão salva em localStorage.
+
+## v0.4.9 - Renderização adaptativa e aceleração
+- Novo RenderManager com Canvas 2D de baixa latência (`desynchronized`) e superfície opaca.
+- Detecção de GPU/WebGL para diagnóstico e preferência de alto desempenho quando disponível.
+- Render scale real por qualidade: Baixo 72%, Médio 90%, Alto 100% (GPU Preferida pode usar 108% no Alto).
+- Física e coordenadas continuam em 800x600 lógicos, sem alterar gameplay.
+- Modo Automático agora também ajusta a resolução interna ao mudar de qualidade por FPS.
+- Nova opção Aceleração: Auto / GPU Preferida / Compatível.
+- Menu de configurações mostra status da renderização e GPU detectada.
+- Correção do mouse/touch para funcionar com qualquer render scale.
+- CSS com hints de compositor (`translateZ(0)`, `will-change`, `contain`) e redução de movimento.

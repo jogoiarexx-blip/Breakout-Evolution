@@ -359,24 +359,32 @@ class UI {
             '• Combo System\n' +
             '• Particle Effects\n' +
             '• Progressive Difficulty\n\n' +
-            'Breakout Evolution v0.4.7'
+            'Breakout Evolution v0.4.9'
         );
     }
 
     handleSettingsInput(e) {
-        const max = 4;
+        const max = 8;
         if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') this.settingsOption = Math.max(0, (this.settingsOption || 0) - 1);
         if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') this.settingsOption = Math.min(max - 1, (this.settingsOption || 0) + 1);
         const dir = (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') ? -1 : (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') ? 1 : 0;
         if (dir && Game.settings) {
             if (this.settingsOption === 0) Game.settings.cycle('graphics', dir);
-            if (this.settingsOption === 1) Game.settings.cycle('difficulty', dir);
-            if (this.settingsOption === 2) Game.settings.toggleAudio();
+            else if (this.settingsOption === 1) Game.settings.cycle('gpu', dir);
+            else if (this.settingsOption === 2) Game.settings.cycle('difficulty', dir);
+            else if (this.settingsOption === 3) Game.settings.toggleAudio();
+            else if (this.settingsOption === 4) Game.settings.adjustVolume('masterVolume', dir);
+            else if (this.settingsOption === 5) Game.settings.adjustVolume('musicVolume', dir);
+            else if (this.settingsOption === 6) Game.settings.adjustVolume('sfxVolume', dir);
         }
         if (e.key === 'Enter' || e.code === 'Space') {
             if (this.settingsOption === 0) Game.settings.cycle('graphics', 1);
-            else if (this.settingsOption === 1) Game.settings.cycle('difficulty', 1);
-            else if (this.settingsOption === 2) Game.settings.toggleAudio();
+            else if (this.settingsOption === 1) Game.settings.cycle('gpu', 1);
+            else if (this.settingsOption === 2) Game.settings.cycle('difficulty', 1);
+            else if (this.settingsOption === 3) Game.settings.toggleAudio();
+            else if (this.settingsOption === 4) Game.settings.adjustVolume('masterVolume', 1);
+            else if (this.settingsOption === 5) Game.settings.adjustVolume('musicVolume', 1);
+            else if (this.settingsOption === 6) Game.settings.adjustVolume('sfxVolume', 1);
             else Game.state = 'MENU';
         }
         if (e.key === 'Escape') Game.state = 'MENU';
@@ -395,7 +403,7 @@ class UI {
         ctx.textAlign='center';ctx.font='900 58px Orbitron, Arial';ctx.fillStyle='#dff8ff';
         if(!Game.settings || Game.settings.shadows()){ctx.shadowBlur=24;ctx.shadowColor='#00d2ff';}
         ctx.fillText('BREAKOUT',Game.width/2,98);ctx.shadowBlur=0;
-        ctx.font='700 18px Orbitron, Arial';ctx.fillStyle='#00d2ff';ctx.fillText('EVOLUTION',Game.width/2,130);ctx.font='600 11px Orbitron, Arial';ctx.fillStyle='#ffd166';ctx.fillText('v0.4.7',Game.width/2,149);
+        ctx.font='700 18px Orbitron, Arial';ctx.fillStyle='#00d2ff';ctx.fillText('EVOLUTION',Game.width/2,130);ctx.font='600 11px Orbitron, Arial';ctx.fillStyle='#ffd166';ctx.fillText('v0.4.9',Game.width/2,149);
         ctx.font='14px Rajdhani, Arial';ctx.fillStyle='#7f9aaa';ctx.fillText('ARCADE • UPGRADES • POWER-UPS',Game.width/2,172);
         const options=['▶ CAMPANHA','◆ LOJA','✦ MELHORIAS','★ CONQUISTAS','▣ PLACAR','⌁ ESTATÍSTICAS','⚙ CONFIGURAÇÕES','⌨ CONTROLES','ⓘ CRÉDITOS'];
         const cols=3,startX=48,startY=220,w=226,h=48,gapX=13,gapY=14;
@@ -417,11 +425,15 @@ class UI {
     }
 
     drawSettings() {
-        const ctx=Game.ctx;ctx.fillStyle='#07101b';ctx.fillRect(0,0,Game.width,Game.height);ctx.textAlign='center';ctx.font='800 38px Orbitron,Arial';ctx.fillStyle='#00d2ff';ctx.fillText('CONFIGURAÇÕES',Game.width/2,86);
-        const vals=[Game.settings.graphicsLabel(),Game.settings.difficulty().label,Game.settings.data.audio?'LIGADO':'DESLIGADO','VOLTAR'];
-        const labels=['QUALIDADE GRÁFICA','DIFICULDADE','ÁUDIO',''];
-        for(let i=0;i<4;i++){const y=172+i*82,sel=(this.settingsOption||0)===i;ctx.fillStyle=sel?'rgba(0,210,255,.15)':'rgba(255,255,255,.025)';ctx.fillRect(150,y,500,60);ctx.strokeStyle=sel?'#00d2ff':'#243446';ctx.strokeRect(150,y,500,60);ctx.font='600 15px Orbitron,Arial';ctx.fillStyle='#91a9b9';ctx.textAlign='left';ctx.fillText(labels[i],174,y+25);ctx.font='700 17px Orbitron,Arial';ctx.textAlign='right';ctx.fillStyle=sel?'#ffd166':'#d5e1e8';ctx.fillText(i<3?`◀  ${vals[i]}  ▶`:vals[i],626,y+37);}
-        ctx.textAlign='center';ctx.font='14px Rajdhani,Arial';ctx.fillStyle='#718899';ctx.fillText('AUTO monitora o dispositivo e pode reduzir efeitos para manter FPS estável.',Game.width/2,535);ctx.fillText('ESC voltar',Game.width/2,566);
+        const ctx=Game.ctx;ctx.fillStyle='#07101b';ctx.fillRect(0,0,Game.width,Game.height);ctx.textAlign='center';ctx.font='800 30px Orbitron,Arial';ctx.fillStyle='#00d2ff';ctx.fillText('CONFIGURAÇÕES',Game.width/2,45);
+        const vals=[Game.settings.graphicsLabel(),Game.settings.gpuLabel(),Game.settings.difficulty().label,Game.settings.data.audio?'LIGADO':'DESLIGADO',`${Game.settings.data.masterVolume}%`,`${Game.settings.data.musicVolume}%`,`${Game.settings.data.sfxVolume}%`,'VOLTAR'];
+        const labels=['QUALIDADE GRÁFICA','ACELERAÇÃO','DIFICULDADE','ÁUDIO','VOLUME GERAL','MÚSICA','EFEITOS',''];
+        const startY=65,rowH=54;
+        for(let i=0;i<8;i++){const y=startY+i*rowH,sel=(this.settingsOption||0)===i;ctx.fillStyle=sel?'rgba(0,210,255,.15)':'rgba(255,255,255,.025)';ctx.fillRect(150,y,500,42);ctx.strokeStyle=sel?'#00d2ff':'#243446';ctx.strokeRect(150,y,500,42);ctx.font='600 12px Orbitron,Arial';ctx.fillStyle='#91a9b9';ctx.textAlign='left';ctx.fillText(labels[i],174,y+17);ctx.font='700 14px Orbitron,Arial';ctx.textAlign='right';ctx.fillStyle=sel?'#ffd166':'#d5e1e8';ctx.fillText(i<7?`◀  ${vals[i]}  ▶`:vals[i],626,y+27);}
+        const status=Game.renderer?Game.renderer.statusLabel():'Canvas 2D';
+        ctx.textAlign='center';ctx.font='600 12px Rajdhani,Arial';ctx.fillStyle='#7dffcf';ctx.fillText(`RENDER: ${status}`,Game.width/2,514);
+        ctx.fillStyle='#718899';ctx.fillText('Volumes são salvos automaticamente. Áudio funciona como mute geral.',Game.width/2,536);
+        ctx.fillText('SETAS/WASD ajustar • ENTER selecionar • ESC voltar',Game.width/2,560);
     }
 
     drawShop() {

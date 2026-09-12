@@ -1,4 +1,4 @@
-// challenges.js - Desafios, estrelas e recompensas da v0.4.7
+// challenges.js - Desafios, estrelas e recompensas da v0.4.9
 class ChallengeSystem {
   constructor(){ this.current=null; }
   start(level){
