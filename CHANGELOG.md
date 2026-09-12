@@ -1,3 +1,22 @@
+# v0.5.4 - HUD profissional
+
+- HUD do gameplay totalmente redesenhado com estilo mais premium e profissional.
+- Cards dedicados para Pontos, Moedas, Nível/Mundo, Vidas, Estrelas e Rank.
+- Faixa inferior integrada com Desafio atual, Dificuldade, Gráficos e progresso da fase.
+- Notificações refeitas no estilo toast com melhor leitura e menos poluição visual.
+- Combo integrado ao painel principal, sem sobreposição excessiva sobre o campo de jogo.
+- Telas de Pausa e Game Over modernizadas no mesmo padrão visual do HUD.
+- Desafio da fase passou a ser desenhado pelo HUD principal, removendo duplicação de painel.
+
+# v0.5.4 - Hotfix do loading inicial
+
+- Inicialização não espera mais o evento `window.load` nem recursos externos.
+- Removida a dependência remota do Google Fonts no caminho crítico de abertura.
+- Preload de imagens agora é paralelo e possui timeout individual.
+- Adicionado watchdog de 8 segundos para sempre liberar o menu principal.
+- Boot tornou-se idempotente e seguro contra chamadas duplicadas.
+- Cache-busting atualizado para v0.5.4.
+
 # v0.5.2 - Auditoria de estabilidade e correções sistêmicas
 
 - Corrigido sistema de skins: Paddle e Ball agora possuem `applySkin()` funcional.

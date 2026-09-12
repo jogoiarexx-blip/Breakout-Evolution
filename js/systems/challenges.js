@@ -25,7 +25,8 @@ class ChallengeSystem {
     return {level,stars:Math.min(3,stars),challenge:this.current?.name||'',challengeDone:!!this.current?.check(s),stats:{...s}};
   }
   drawHUD(){
-    if(!this.current||!Game.levelRunStats)return;
-    const c=Game.ctx;c.save();c.textAlign='left';c.font='600 11px Rajdhani,Arial';c.fillStyle='rgba(0,0,0,.58)';c.fillRect(14,58,230,38);c.strokeStyle='rgba(255,255,255,.12)';c.strokeRect(14,58,230,38);c.fillStyle='#f2f7fb';c.fillText('DESAFIO: '+this.current.name.toUpperCase(),24,74);c.fillStyle='#91aabc';c.fillText(this.current.desc,24,89);c.restore();
+    // Integrado ao HUD principal a partir da v0.5.4.
+    // Mantido como método compatível para não quebrar chamadas antigas.
+    return;
   }
 }

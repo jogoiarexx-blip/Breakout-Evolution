@@ -1,7 +1,13 @@
 class LevelLoader {
-  constructor(){this.overlay=document.getElementById('loading');this.fill=document.querySelector('.loader-fill');this.text=document.querySelector('.loading-text');this.badge=document.querySelector('.phase-badge');this.busy=false;}
-  setProgress(v,msg){this.fill.style.width=`${Math.max(5,Math.min(100,Math.round(v*100)))}%`;if(msg)this.text.textContent=msg;}
+  constructor(){this.overlay=document.getElementById('loading');this.fill=document.querySelector('.loader-fill');this.text=document.querySelector('.loading-text');this.badge=document.querySelector('.phase-badge');this.busy=false;this.bootPromise=null;}
+  setProgress(v,msg){if(this.fill)this.fill.style.width=`${Math.max(5,Math.min(100,Math.round(v*100)))}%`;if(msg&&this.text)this.text.textContent=msg;}
   async boot(){
+    if(this.bootPromise)return this.bootPromise;
+    this.bootPromise=this.runBoot();
+    return this.bootPromise;
+  }
+  async runBoot(){
+    if(!this.overlay){Game.state='MENU';return;}
     this.overlay.classList.remove('hidden');
     this.badge.textContent='INICIALIZAÇÃO';
     this.text.textContent='CARREGANDO ASSETS';
@@ -22,6 +28,7 @@ class LevelLoader {
       Game.state='MENU';
     }
     await this.finish();
+    Game.canvas?.focus();
   }
   async load(level, callback){
     if(this.busy)return false;
@@ -34,5 +41,9 @@ class LevelLoader {
     finally{await this.finish();this.busy=false;if(ok&&Game.state==='LOADING')Game.state='PLAYING';}
     return ok;
   }
-  finish(){this.fill.style.width='100%';return new Promise(resolve=>setTimeout(()=>{this.overlay.classList.add('hidden');this.fill.style.width='0%';resolve();},180));}
+  finish(){
+    if(!this.overlay)return Promise.resolve();
+    if(this.fill)this.fill.style.width='100%';
+    return new Promise(resolve=>setTimeout(()=>{this.overlay.classList.add('hidden');if(this.fill)this.fill.style.width='0%';resolve();},180));
+  }
 }

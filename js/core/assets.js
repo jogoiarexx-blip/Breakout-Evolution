@@ -1,6 +1,6 @@
 class AssetManager {
   constructor(){
-    this.images=new Map(); this.audio=new Map(); this.currentLevel=1;
+    this.images=new Map(); this.audio=new Map(); this.pendingImages=new Map(); this.missingImages=new Set(); this.currentLevel=1;
     this.sharedImages={
       menu:'assets/images/backgrounds/menu.webp',
       paddle:'assets/images/paddle/default.webp',
@@ -18,10 +18,29 @@ class AssetManager {
     this.powerups=['multiball','expand','life','slow','fireball','shield','laser','coin'];
     this.bossWorlds=['neon','furnace','crystal','void','gold'];
   }
-  async loadImage(key,url){ if(this.images.has(key)) return this.images.get(key); return new Promise(resolve=>{const img=new Image();img.onload=()=>{this.images.set(key,img);resolve(img)};img.onerror=()=>resolve(null);img.src=url;}); }
+  async loadImage(key,url,timeoutMs=5000){
+    if(this.images.has(key)) return this.images.get(key);
+    if(this.missingImages.has(key)) return null;
+    if(this.pendingImages.has(key)) return this.pendingImages.get(key);
+    const job=new Promise(resolve=>{
+      const img=new Image(); let settled=false;
+      const finish=value=>{
+        if(settled)return; settled=true; clearTimeout(timer);
+        img.onload=null; img.onerror=null;
+        if(value)this.images.set(key,value);else this.missingImages.add(key);
+        this.pendingImages.delete(key); resolve(value);
+      };
+      const timer=setTimeout(()=>{console.warn(`[Breakout] Timeout ao carregar ${url}`);finish(null);},timeoutMs);
+      img.onload=()=>finish(img);
+      img.onerror=()=>{console.warn(`[Breakout] Asset ausente ou inválido: ${url}`);finish(null);};
+      img.src=url;
+    });
+    this.pendingImages.set(key,job);
+    return job;
+  }
   async preloadShared(progress=()=>{}){
     const jobs=Object.entries(this.sharedImages); let done=0;
-    for(const [k,u] of jobs){await this.loadImage(k,u); progress(++done/jobs.length);}
+    await Promise.all(jobs.map(([k,u])=>this.loadImage(k,u).finally(()=>progress(++done/jobs.length))));
   }
   async loadLevel(level,progress=()=>{}){
     this.currentLevel=level; const theme=Math.floor(((level-1)%25)/5)+1; const manifest=this.levelManifests[theme];
@@ -31,7 +50,7 @@ class AssetManager {
     const bw=this.bossWorlds[theme-1];
     jobs.push([`boss-${theme}`,`assets/images/bosses/${bw}-boss.webp`],[`mini-${theme}`,`assets/images/bosses/${bw}-mini.webp`]);
     ['pulse','rain','warning-laser','shockwave','summon','hit-flash','damage-burst','defeat-explosion'].forEach(n=>jobs.push([`vfx-${n}`,`assets/images/vfx/${n}.webp`]));
-    let done=0; for(const [k,u] of jobs){await this.loadImage(k,u);progress(++done/jobs.length);}
+    let done=0; await Promise.all(jobs.map(([k,u])=>this.loadImage(k,u).finally(()=>progress(++done/jobs.length))));
     if(Game.audio) await Game.audio.setLevelMusic(theme, manifest.music);
   }
   drawContain(ctx,img,cx,cy,maxW,maxH,alpha=1){
