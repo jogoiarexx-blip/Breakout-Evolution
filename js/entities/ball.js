@@ -301,9 +301,10 @@ class Ball {
         }
         
         // Sprite WebP principal; mantém fallback vetorial caso o asset falhe
-        const sprite=Game.assets?.image(this.fireball?'fireball':'ball');
+        const overcharged=!!(Game.weapons?.enabled && this.fireball);
+        const sprite=Game.assets?.image(overcharged?'overchargeBall':(this.fireball?'fireball':'ball'));
         if(sprite){
-            const size=this.radius*3.1; ctx.save();
+            const size=this.radius*(overcharged?3.9:(this.fireball?3.7:3.35)); ctx.save();
             if(Game.settings?.shadows()){ctx.shadowBlur=this.fireball?24:14;ctx.shadowColor=this.fireball?'#ff5a00':'#00d2ff';}
             ctx.drawImage(sprite,this.x-size/2,this.y-size/2,size,size);ctx.restore();
             if(Game.settings?.effectiveGraphics==='LOW'){ctx.shadowBlur=0;return;}

@@ -369,8 +369,10 @@ class Brick {
         
         // 🎨 CORPO PRINCIPAL
         this.drawMainBody(ctx, x, y);
-        const asset=Game.assets?.image(`brick-${this.type}`);
-        if(asset){ctx.globalAlpha=Game.settings?.effectiveGraphics==='LOW'?.92:.48;ctx.drawImage(asset,x,y,this.width,this.height);ctx.globalAlpha=1;}
+        let spriteType=this.type;
+        if(this.type==='normal'){const wi=Game.worlds?.worldIndex(Game.data.level)||0;spriteType=['neon','lava','diamond','void','coin'][wi]||'normal';}
+        const asset=Game.assets?.image(`brick-${spriteType}`)||Game.assets?.image(`brick-${this.type}`);
+        if(asset){ctx.globalAlpha=Game.settings?.effectiveGraphics==='LOW'?.98:.88;ctx.drawImage(asset,x-2,y-2,this.width+4,this.height+4);ctx.globalAlpha=1;}
         
         // 🎨 TEXTURAS E DETALHES
         this.drawTypeSpecificDetails(ctx, x, y);

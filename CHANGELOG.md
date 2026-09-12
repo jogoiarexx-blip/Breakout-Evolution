@@ -1,6 +1,13 @@
+# v0.4.7 - Visual & Audio Upgrade
+- Aplicados sprites gerados para paddle, bolas, bricks, power-ups, hazards, bosses e VFX.
+- Bosses e mini-bosses agora usam artes exclusivas por mundo.
+- Portais, barreiras, gravidade e laser ganharam sprites dedicados.
+- Áudio retrabalhado com SFX em camadas e novos sons para laser, portal, boss e explosão.
+- Fallback vetorial e sonoro preservado para robustez.
+
 # Changelog
 
-## 0.4.6
+## 0.4.7
 - Nova tela CAMPANHA com cinco mundos e progresso visual.
 - Ranking global por estrelas: Recruta, Piloto, Veterano, Mestre e Lendário.
 - Conquistas de mundo: Conquistado, Mestre e Perfeito.

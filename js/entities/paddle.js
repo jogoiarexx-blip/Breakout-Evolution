@@ -284,10 +284,10 @@ class Paddle {
 
     draw() {
         const ctx = Game.ctx;
-        const sprite=Game.assets?.image('paddle');
+        const spriteKey = this.hasShield ? 'paddleShield' : (Game.weapons?.enabled ? 'paddleLaser' : (this.width > this.baseWidth*1.25 ? 'paddleWide' : 'paddle'));
+        const sprite=Game.assets?.image(spriteKey) || Game.assets?.image('paddle');
         if(sprite && Game.settings?.effectiveGraphics==='LOW'){
-            ctx.drawImage(sprite,this.x,this.y-8,this.width,this.height+16);
-            if(this.hasShield)this.drawShield(ctx);
+            ctx.drawImage(sprite,this.x-5,this.y-11,this.width+10,this.height+22);
             return;
         }
         
@@ -308,7 +308,7 @@ class Paddle {
         // 🎨 CORPO PRINCIPAL COM GRADIENTE 3D
         this.drawMainBody(ctx);
         
-        if(sprite){ctx.globalAlpha=.68;ctx.drawImage(sprite,this.x,this.y-8,this.width,this.height+16);ctx.globalAlpha=1;}
+        if(sprite){ctx.globalAlpha=.96;ctx.drawImage(sprite,this.x-7,this.y-12,this.width+14,this.height+24);ctx.globalAlpha=1;}
         // 🎨 DETALHES METÁLICOS
         this.drawMetallicDetails(ctx);
         

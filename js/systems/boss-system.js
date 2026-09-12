@@ -10,6 +10,7 @@ class BossSystem {
     if(this.active){
       Game.state='BOSS_INTRO';
       if(Game.ball) Game.ball.active=false;
+      if(Game.audio) Game.audio.play('bossWarning');
       if(Game.hud) Game.hud.addNotification(this.kind==='BOSS'?'⚠ CORE GUARDIAN DETECTADO':'⚠ MINI-GUARDIÃO', this.kind==='BOSS'?'#ff3158':'#ffad42',2.2);
     }
   }
@@ -96,19 +97,23 @@ class BossSystem {
       const coins=this.kind==='BOSS'?250+this.level*8:100+this.level*4;Game.economy?.addCoins(coins);Game.data.maxLives=Math.min(8,(Game.data.maxLives||3)+(this.kind==='BOSS'?1:0));Game.data.lives=Math.max(Game.data.lives,Game.data.maxLives);
       if(Game.hud)Game.hud.addNotification(this.kind==='BOSS'?`RECOMPENSA: +1 VIDA MÁX • +${coins} MOEDAS`:`RECOMPENSA: +${coins} MOEDAS`,'#ffd166',2.4);
     }
+    if(Game.audio) Game.audio.play('explosion');
     this.active=false;this.projectiles=[];this.beams=[];
   }
   draw(){
     if(!this.active)return;const ctx=Game.ctx;ctx.save();
-    for(const p of this.projectiles){ctx.shadowBlur=Game.settings?.effectiveGraphics==='LOW'?0:14;ctx.shadowColor=p.color;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+    for(const p of this.projectiles){const fx=Game.assets?.image('vfx-pulse');ctx.shadowBlur=Game.settings?.effectiveGraphics==='LOW'?0:14;ctx.shadowColor=p.color;if(fx){const z=p.r*5.5;ctx.drawImage(fx,p.x-z/2,p.y-z/2,z,z);}else{ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}}
     ctx.shadowBlur=0;
-    for(const b of this.beams){if(b.warning>0){ctx.globalAlpha=.25+.2*Math.sin(this.timer*14);ctx.fillStyle='#ff3158';ctx.fillRect(b.x,70,b.w,Game.height-130);}else{ctx.globalAlpha=.75;ctx.fillStyle='#fff';ctx.fillRect(b.x,70,b.w,Game.height-130);ctx.globalAlpha=.8;ctx.fillStyle='#ff3158';ctx.fillRect(b.x+7,70,b.w-14,Game.height-130);}}
+    for(const b of this.beams){if(b.warning>0){const fx=Game.assets?.image('vfx-warning-laser');ctx.globalAlpha=.35+.2*Math.sin(this.timer*14);if(fx)ctx.drawImage(fx,b.x-30,55,b.w+60,Game.height-110);else{ctx.fillStyle='#ff3158';ctx.fillRect(b.x,70,b.w,Game.height-130);}}else{ctx.globalAlpha=.78;ctx.fillStyle='#fff';ctx.fillRect(b.x,70,b.w,Game.height-130);ctx.globalAlpha=.9;ctx.fillStyle='#ff3158';ctx.fillRect(b.x+7,70,b.w-14,Game.height-130);}}
     ctx.globalAlpha=1;
     this.drawWorldCore(ctx);
     if(Game.state==='BOSS_INTRO')this.drawIntro(ctx);ctx.restore();
   }
   drawWorldCore(ctx){
     const c=this.bossCenter(),wi=Game.worlds?.worldIndex(this.level)||0,q=Game.settings?.effectiveGraphics||'MEDIUM',t=this.timer;
+    const bossSprite=Game.assets?.image(`${this.kind==='BOSS'?'boss':'mini'}-${wi+1}`);
+    if(bossSprite){ctx.save();ctx.translate(c.x,c.y);const pulse=1+Math.sin(t*3)*.035;ctx.scale(pulse,pulse);const size=this.kind==='BOSS'?112:86;if(q!=='LOW'){ctx.shadowBlur=24;ctx.shadowColor=['#00d2ff','#ff6238','#8ee7ff','#b388ff','#ffd166'][wi]||'#fff';}ctx.drawImage(bossSprite,-size/2,-size/2,size,size);ctx.restore();return;}
+    
     const colors=['#00d2ff','#ff6238','#8ee7ff','#b388ff','#ffd166'];const color=colors[wi]||'#fff';
     ctx.save();ctx.translate(c.x,c.y);ctx.rotate(t*(wi%2?-.45:.45));ctx.globalAlpha=.88;
     if(q!=='LOW'){ctx.shadowBlur=18+(this.phase*4);ctx.shadowColor=color;}ctx.strokeStyle=color;ctx.fillStyle='rgba(5,10,18,.72)';ctx.lineWidth=3;

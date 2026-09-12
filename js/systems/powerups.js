@@ -243,7 +243,7 @@ class PowerUp {
     
     draw() {
         const ctx = Game.ctx;
-        const assetKey={multiball:'multiball',widePaddle:'expand',extraLife:'life',slowmo:'slow',fireball:'fireball',shield:'shield',laser:'laser',overcharge:'overcharge'}[this.type];
+        const assetKey={multiball:'multiball',widePaddle:'expand',extraLife:'life',slowmo:'slow',fireball:'fireball',coinRain:'coin',shield:'shield',laser:'laser',overcharge:'fireball'}[this.type];
         const sprite=assetKey?Game.assets?.image(`power-${assetKey}`):null;
         if(sprite){
             const pulse=Game.settings?.effectiveGraphics==='LOW'?1:1+Math.sin(this.glowPhase)*.08;

@@ -36,18 +36,18 @@ class WorldHazardSystem {
       const dx=ball.x-cx,dy=ball.y-cy;if(dx*dx+dy*dy<=r*r){if(Math.abs(dx)>Math.abs(dy))ball.speedX*=-1;else ball.speedY*=-1;ball.x+=Math.sign(dx||1)*2;ball.y+=Math.sign(dy||1)*2;if(Game.audio)Game.audio.play('wallBounce');}
     }
     // portais
-    if(this.portals.length===2 && this.portalCooldown<=0){for(let i=0;i<2;i++){const p=this.portals[i],dx=ball.x-p.x,dy=ball.y-p.y;if(dx*dx+dy*dy<(p.r+ball.radius)**2){const t=this.portals[p.pair];ball.x=t.x+(ball.speedX>=0?30:-30);ball.y=t.y;this.portalCooldown=.55;if(Game.particles){Game.particles.emit(p.x,p.y,18,p.color);Game.particles.emit(t.x,t.y,18,t.color);}break;}}}
+    if(this.portals.length===2 && this.portalCooldown<=0){for(let i=0;i<2;i++){const p=this.portals[i],dx=ball.x-p.x,dy=ball.y-p.y;if(dx*dx+dy*dy<(p.r+ball.radius)**2){const t=this.portals[p.pair];ball.x=t.x+(ball.speedX>=0?30:-30);ball.y=t.y;this.portalCooldown=.55;if(Game.audio)Game.audio.play('portal');if(Game.particles){Game.particles.emit(p.x,p.y,18,p.color);Game.particles.emit(t.x,t.y,18,t.color);}break;}}}
     // poço gravitacional
     if(this.gravity.active){const dx=this.gravity.x-ball.x,dy=this.gravity.y-ball.y,d=Math.max(75,Math.hypot(dx,dy));const f=this.gravity.strength*(160/d);ball.speedX+=dx/d*f;ball.speedY+=dy/d*f;}
     // calor da fornalha: tocar a faixa inferior acelera a bola, sem perda de vida injusta
     if(this.lava.active && ball.y>this.lava.y){ball.speedY=-Math.abs(ball.speedY)*1.04;ball.y=this.lava.y-ball.radius;if(Game.particles)Game.particles.emit(ball.x,this.lava.y,8,'#ff6b35');}
   }
   draw(){const ctx=Game.ctx,q=Game.settings?.effectiveGraphics||'MEDIUM';ctx.save();
-    for(const o of this.walls){ctx.fillStyle='#27313d';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#9aa8b6';ctx.strokeRect(o.x,o.y,o.w,o.h);if(q!=='LOW'){ctx.fillStyle='rgba(255,255,255,.15)';ctx.fillRect(o.x+4,o.y+3,o.w-8,2);}}
+    for(const o of this.walls){const im=Game.assets?.image('hazardBarrier');if(im)ctx.drawImage(im,o.x-8,o.y-12,o.w+16,o.h+24);else{ctx.fillStyle='#27313d';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#9aa8b6';ctx.strokeRect(o.x,o.y,o.w,o.h);}}
     for(const b of this.bumpers){ctx.fillStyle='rgba(0,210,255,.18)';ctx.fillRect(b.x,b.y,b.w,b.h);ctx.strokeStyle='#00d2ff';ctx.strokeRect(b.x,b.y,b.w,b.h);}
-    for(const p of this.portals){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.strokeStyle=p.color;ctx.lineWidth=q==='HIGH'?6:3;if(q!=='LOW'){ctx.shadowBlur=20;ctx.shadowColor=p.color;}ctx.stroke();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);ctx.stroke();}
+    for(let i=0;i<this.portals.length;i++){const p=this.portals[i],im=Game.assets?.image(i===0?'hazardPortalPurple':'hazardPortalBlue');if(im){const z=p.r*3.2;ctx.drawImage(im,p.x-z/2,p.y-z/2,z,z);}else{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.strokeStyle=p.color;ctx.lineWidth=q==='HIGH'?6:3;ctx.stroke();}}
     if(this.lava.active){const g=ctx.createLinearGradient(0,this.lava.y,0,Game.height);g.addColorStop(0,'rgba(255,110,30,.72)');g.addColorStop(1,'rgba(120,10,0,.25)');ctx.fillStyle=g;ctx.fillRect(0,this.lava.y,Game.width,Game.height-this.lava.y);ctx.strokeStyle='#ffbd4a';ctx.beginPath();for(let x=0;x<=Game.width;x+=18){const y=this.lava.y+Math.sin(this.time*5+x*.05)*4; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();}
-    if(this.gravity.active){const r=26+Math.sin(this.time*3)*4;ctx.strokeStyle='#ffd166';ctx.lineWidth=3;ctx.beginPath();ctx.arc(this.gravity.x,this.gravity.y,r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.25;ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(this.gravity.x,this.gravity.y,r*1.7,0,Math.PI*2);ctx.fill();}
+    if(this.gravity.active){const im=Game.assets?.image('hazardGravity');if(im){const z=86+Math.sin(this.time*3)*6;ctx.drawImage(im,this.gravity.x-z/2,this.gravity.y-z/2,z,z);}else{const r=26+Math.sin(this.time*3)*4;ctx.strokeStyle='#ffd166';ctx.lineWidth=3;ctx.beginPath();ctx.arc(this.gravity.x,this.gravity.y,r,0,Math.PI*2);ctx.stroke();}}
     ctx.restore();
   }
   label(){return ({1:'PLATAFORMAS MÓVEIS',2:'MARÉ DE MAGMA',3:'BARREIRAS CRISTALINAS',4:'PORTAIS INSTÁVEIS',5:'POÇO GRAVITACIONAL'})[this.world]||'';}
