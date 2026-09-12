@@ -362,12 +362,25 @@ class Brick {
         // 🎨 BRILHO AMBIENTE apenas em médio/alto
         if(!Game.settings || Game.settings.effectiveGraphics!=='LOW') this.drawAmbientGlow(ctx, x, y);
         let spriteType=this.type;
-        if(this.type==='normal'){const wi=Game.worlds?.worldIndex(Game.data.level)||0;spriteType=['neon','lava','diamond','void','coin'][wi]||'normal';}
+        if(this.type==='normal'){
+            const wi=Game.worlds?.worldIndex(Game.data.level)||0;
+            spriteType=['neon','lava','diamond','void','coin'][wi]||'normal';
+        }
         const asset=Game.assets?.image(`brick-${spriteType}`)||Game.assets?.image(`brick-${this.type}`);
         if(asset){
-            // O sprite novo substitui o bloco vetorial antigo. Preserva a proporção original.
-            const maxW=this.width+8,maxH=Math.max(30,this.height+14);
-            Game.assets.drawContain(ctx,asset,x+this.width/2,y+this.height/2,maxW,maxH,Game.settings?.effectiveGraphics==='LOW'?.98:.94);
+            // Sprite principal com clip arredondado para evitar esticamento e overflow.
+            ctx.save();
+            this.roundRect(ctx, x, y, this.width, this.height, 6);
+            ctx.clip();
+            Game.assets.drawCover(ctx, asset, x, y, this.width, this.height, Game.settings?.effectiveGraphics==='LOW' ? .97 : 1);
+            ctx.restore();
+            // Borda leve para preservar leitura no tamanho pequeno.
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+            ctx.lineWidth = 1;
+            this.roundRect(ctx, x + 0.5, y + 0.5, this.width - 1, this.height - 1, 5.5);
+            ctx.stroke();
+            ctx.restore();
             this.drawDamageEffects(ctx,x,y);
         }else{
             // Fallback antigo somente se a arte não carregar.

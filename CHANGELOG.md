@@ -1,4 +1,15 @@
-# v0.4.9 - Áudio ajustável e sprites corrigidos
+# v0.5.0 - Bricks refeitos, render limpo e campo visual corrigido
+
+- Sprites dos bricks refeitos do zero em formato widescreen (150x40) pensando no tamanho real do gameplay.
+- Tipos refeitos: normal, strong, metal, diamond, lava, neon, void, coin, explosive, moving e mystery.
+- Render dos bricks agora usa clip arredondado + drawCover, eliminando deformação, overflow e aparência achatada.
+- Visual antigo dos bricks removido do render principal; permanece apenas como fallback caso um asset falhe.
+- Campo de jogo ganhou mais respiro vertical com OFFSET_TOP maior e altura dos bricks levemente ajustada.
+- Melhor separação visual entre HUD/desafio e a grade de tijolos.
+- Mantidos controles de volume Geral/Música/Efeitos e perfis gráficos AUTO/LOW/MEDIUM/HIGH.
+- Revisão geral de leitura visual dos mundos para o jogador identificar melhor os tipos de bloco.
+
+# v0.5.0 - Áudio ajustável e sprites corrigidos
 
 - Volume geral, música e efeitos separados e persistentes.
 - Áudio on/off agora funciona como mute sem perder volumes.
@@ -7,7 +18,7 @@
 - Visual antigo fica apenas como fallback se um asset falhar.
 - Power-ups também usam desenho proporcional.
 
-# v0.4.9 - Visual & Audio Upgrade
+# v0.5.0 - Visual & Audio Upgrade
 - Aplicados sprites gerados para paddle, bolas, bricks, power-ups, hazards, bosses e VFX.
 - Bosses e mini-bosses agora usam artes exclusivas por mundo.
 - Portais, barreiras, gravidade e laser ganharam sprites dedicados.
@@ -16,7 +27,7 @@
 
 # Changelog
 
-## 0.4.9
+## 0.5.0
 - Nova tela CAMPANHA com cinco mundos e progresso visual.
 - Ranking global por estrelas: Recruta, Piloto, Veterano, Mestre e Lendário.
 - Conquistas de mundo: Conquistado, Mestre e Perfeito.
@@ -67,7 +78,7 @@
 - Velocidade recebe multiplicador progressivo por mundo sem remover a dificuldade selecionável.
 - Progressão salva em localStorage.
 
-## v0.4.9 - Renderização adaptativa e aceleração
+## v0.5.0 - Renderização adaptativa e aceleração
 - Novo RenderManager com Canvas 2D de baixa latência (`desynchronized`) e superfície opaca.
 - Detecção de GPU/WebGL para diagnóstico e preferência de alto desempenho quando disponível.
 - Render scale real por qualidade: Baixo 72%, Médio 90%, Alto 100% (GPU Preferida pode usar 108% no Alto).

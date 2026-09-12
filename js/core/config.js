@@ -28,9 +28,9 @@ const CONFIG = {
     // ✨ NOVO: Sistema de tijolos aprimorado com mais variedades
     BRICKS: {
         WIDTH: 75,
-        HEIGHT: 20,
+        HEIGHT: 22,
         PADDING: 5,
-        OFFSET_TOP: 60,
+        OFFSET_TOP: 72,
         CRACK_SYSTEM: true, // Sistema de rachaduras
         TYPES: {
             // Básicos

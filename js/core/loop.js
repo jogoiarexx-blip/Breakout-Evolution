@@ -573,7 +573,7 @@ if (initializeGame()) {
     // Mensagem de boas-vindas
     setTimeout(() => {
         if (Game.state === 'MENU') {
-            console.log('%c🎮 BREAKOUT EVOLUTION v0.4.9', 'color: #00d2ff; font-size: 20px; font-weight: bold');
+            console.log('%c🎮 BREAKOUT EVOLUTION v0.5.0', 'color: #00d2ff; font-size: 20px; font-weight: bold');
             console.log('%cControles:', 'color: #FFD700; font-weight: bold');
             console.log('  Movimento: ← → ou A D ou Mouse');
             console.log('  Lançar: SPACE');

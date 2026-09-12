@@ -1,8 +1,8 @@
-# Breakout Evolution v0.4.9
+# Breakout Evolution v0.5.0
 
 Evolução modular do Breakout com campanha de 25 fases dividida em 5 mundos.
 
-## Destaques da v0.4.9
+## Destaques da v0.5.0
 - Tela de campanha com 5 mundos, bosses, estrelas e ranking.
 - Árvore de melhorias permanentes usando Pontos de Estrela.
 - Melhorias reais: paddle, vidas, chance de power-up, moedas e estabilidade da bola.

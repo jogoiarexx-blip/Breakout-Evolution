@@ -1,4 +1,4 @@
-// meta-progression.js - árvore permanente de estrelas + modificadores de corrida v0.4.9
+// meta-progression.js - árvore permanente de estrelas + modificadores de corrida v0.5.0
 class MetaProgressionSystem {
   constructor(){
     this.key='breakout_meta_v046';
